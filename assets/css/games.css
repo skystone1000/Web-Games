@@ -1,6 +1,6 @@
 /* ── Design tokens — Option A: duplicated from portfolio assets/css/main.css
    Sync comment: keep in sync with portfolio assets/css/main.css
-   Last synced: 2026-04-28 */
+   Last synced: 2026-04-28 — class names aligned to main.css conventions */
 :root {
   --primary: #2979FF;
   --primary-light: #5C9EFF;
@@ -54,7 +54,7 @@ ul { list-style: none; }
   margin: 0 auto;
 }
 
-section { padding: 86px 6vw; }
+section { padding: 96px 6vw; }
 
 .s-label {
   font-size: 0.73rem;
@@ -77,12 +77,12 @@ section { padding: 86px 6vw; }
 
 .s-sub {
   color: var(--text2);
-  max-width: 580px;
+  max-width: 560px;
   font-size: 1rem;
   line-height: 1.7;
 }
 
-.s-head { margin-bottom: 3rem; }
+.s-head { margin-bottom: 3.5rem; }
 
 /* ── Buttons ─────────────────────────────────────────────── */
 .btn {
@@ -324,12 +324,7 @@ h1 {
   max-width: 760px;
 }
 
-h1 span {
-  background: linear-gradient(135deg, var(--primary-light), var(--accent));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+.hub-hero h1 span { color: var(--primary-light); }
 
 .hub-hero p {
   margin: 1.25rem 0 2rem;
@@ -429,19 +424,19 @@ h1 span {
   border: 1px solid var(--border);
 }
 
-.tag.live {
+.live {
   background: rgba(0, 229, 255, 0.1);
   color: var(--accent);
   border-color: rgba(0, 229, 255, 0.18);
 }
 
-.tag.js {
+.js {
   background: rgba(255, 214, 0, 0.1);
   color: #E6C200;
   border-color: rgba(255, 214, 0, 0.18);
 }
 
-.tag.soon {
+.soon {
   background: rgba(138, 153, 179, 0.1);
   color: var(--text2);
   border-color: var(--border);
@@ -468,6 +463,6 @@ h1 span {
 @media (max-width: 640px) {
   .nav-links { display: none; }
   .burger { display: flex; }
-  section { padding: 66px 5vw; }
+  section { padding: 70px 5vw; }
   .hub-hero { padding-top: 110px; min-height: auto; }
 }
