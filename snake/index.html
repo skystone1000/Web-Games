@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Snake — Games</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,8 +12,23 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
     <link rel="stylesheet" href="../assets/css/games.css" />
     <style>
+        :root {
+            --nav-h: 66px;
+            --app-h: 100vh;
+        }
+
+        html,
         body {
+            width: 100%;
+            height: 100%;
             overflow: hidden;
+            overscroll-behavior: none;
+        }
+
+        body {
+            position: fixed;
+            inset: 0;
+            touch-action: none;
         }
 
         /* Force nav to always show glass — no scroll on game pages */
@@ -28,8 +43,13 @@
             flex-direction: column;
             align-items: stretch;
             justify-content: flex-start;
-            padding-top: 66px;
-            /* fixed nav height */
+            width: 100vw;
+            height: var(--app-h);
+            height: 100dvh;
+            max-height: var(--app-h);
+            min-height: 0;
+            padding-top: var(--nav-h);
+            overflow: hidden;
         }
 
         /* ── HUD ── */
@@ -38,6 +58,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 10px;
             padding: 10px 28px;
             background: rgba(13, 21, 38, 0.9);
             backdrop-filter: blur(8px);
@@ -67,22 +88,48 @@
         }
 
         .hud-title {
-            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 0;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: 0.4px;
+            line-height: 1.25;
+            text-align: center;
+        }
+
+        .hud-title small {
+            max-width: 52vw;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.66rem;
             font-weight: 700;
-            color: var(--text2);
-            letter-spacing: 0.5px;
+            color: var(--text3);
+            letter-spacing: 0.2px;
         }
 
         /* ── Canvas area ── */
         .canvas-wrap {
-            flex: 1;
+            flex: 1 1 auto;
             width: 100%;
+            min-height: 0;
             position: relative;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(ellipse 70% 60% at 75% 15%, rgba(41, 121, 255, 0.11), transparent 62%),
+                var(--bg);
         }
 
         #game-canvas {
             display: block;
+            max-width: 100%;
+            max-height: 100%;
         }
 
         /* ── Overlay (start / pause / game-over) ── */
@@ -93,10 +140,12 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 1rem;
+            gap: 0.85rem;
+            padding: 18px;
             background: rgba(8, 13, 26, 0.82);
             backdrop-filter: blur(6px);
             -webkit-backdrop-filter: blur(6px);
+            overflow: hidden;
         }
 
         #overlay.hidden {
@@ -104,22 +153,74 @@
         }
 
         .ov-emoji {
-            font-size: 3.2rem;
+            font-size: clamp(2.1rem, 8vw, 3.2rem);
             line-height: 1;
         }
 
         .ov-title {
-            font-size: 1.5rem;
+            font-size: clamp(1.15rem, 4vw, 1.5rem);
             font-weight: 800;
             color: var(--text);
+            line-height: 1.15;
         }
 
         .ov-sub {
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             color: var(--text2);
             text-align: center;
-            max-width: 340px;
-            line-height: 1.6;
+            max-width: min(440px, 92vw);
+            line-height: 1.5;
+        }
+
+        .settings-panel {
+            width: min(640px, 94vw);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 0.15rem;
+        }
+
+        .settings-panel.hidden {
+            display: none;
+        }
+
+        .setting-card {
+            min-width: 0;
+            background: rgba(17, 24, 39, 0.84);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 10px;
+            box-shadow: 0 8px 26px rgba(0, 0, 0, 0.18);
+        }
+
+        .setting-card label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.64rem;
+            font-weight: 800;
+            letter-spacing: 1.1px;
+            text-transform: uppercase;
+            color: var(--text3);
+        }
+
+        .setting-card select {
+            width: 100%;
+            min-height: 36px;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 10px;
+            background: var(--surface2);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            padding: 0 9px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .setting-card select:focus {
+            border-color: rgba(0, 229, 255, 0.45);
+            box-shadow: 0 0 0 3px var(--accent-dim);
         }
 
         /* ── Controls hint ── */
@@ -150,6 +251,98 @@
             font-size: 0.7rem;
             color: var(--text2);
         }
+
+        @media (max-width: 640px) {
+            .hud {
+                padding: 8px 14px;
+            }
+
+            .hud-group {
+                min-width: 54px;
+            }
+
+            .hud-label {
+                font-size: 0.54rem;
+                letter-spacing: 1px;
+            }
+
+            .hud-val {
+                font-size: 1.08rem;
+            }
+
+            .hud-title {
+                font-size: 0.84rem;
+            }
+
+            .hud-title small {
+                max-width: 42vw;
+                font-size: 0.58rem;
+            }
+
+            #overlay {
+                justify-content: center;
+                gap: 0.62rem;
+                padding: 12px;
+            }
+
+            .settings-panel {
+                width: min(360px, 92vw);
+                grid-template-columns: 1fr;
+                gap: 7px;
+            }
+
+            .setting-card {
+                display: grid;
+                grid-template-columns: 80px 1fr;
+                align-items: center;
+                gap: 8px;
+                padding: 7px 8px;
+                border-radius: 12px;
+            }
+
+            .setting-card label {
+                margin: 0;
+                font-size: 0.58rem;
+            }
+
+            .setting-card select {
+                min-height: 32px;
+                font-size: 0.76rem;
+            }
+
+            .hints {
+                display: none;
+            }
+        }
+
+        @media (max-height: 620px) {
+            .hud {
+                padding-top: 6px;
+                padding-bottom: 6px;
+            }
+
+            #overlay {
+                gap: 0.52rem;
+            }
+
+            .ov-emoji {
+                display: none;
+            }
+
+            .ov-sub {
+                font-size: 0.78rem;
+                line-height: 1.35;
+            }
+
+            .settings-panel {
+                gap: 6px;
+            }
+
+            .setting-card {
+                padding-top: 6px;
+                padding-bottom: 6px;
+            }
+        }
     </style>
 </head>
 
@@ -162,7 +355,10 @@
                 <div class="hud-label">Score</div>
                 <div class="hud-val" id="score">0</div>
             </div>
-            <div class="hud-title">🐍 Snake</div>
+            <div class="hud-title">
+                <span>🐍 Snake</span>
+                <small id="mode-label">Normal · Standard · No Obstacles</small>
+            </div>
             <div class="hud-group">
                 <div class="hud-label">Best</div>
                 <div class="hud-val" id="best">0</div>
@@ -176,9 +372,40 @@
                 <div class="ov-emoji" id="ov-emoji">🐍</div>
                 <div class="ov-title" id="ov-title">Snake</div>
                 <div class="ov-sub" id="ov-sub">
-                    Use arrow keys or WASD to move.<br>Space to pause / resume.
+                    Swipe on mobile or use arrow keys / WASD.<br>Tap canvas or press Space to pause.
                 </div>
-                <button class="btn btn-p" id="ov-btn" style="margin-top:0.5rem">
+
+                <div class="settings-panel" id="settings-panel">
+                    <div class="setting-card">
+                        <label for="level-select">Level</label>
+                        <select id="level-select" aria-label="Choose level">
+                            <option value="easy">Easy</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="hard">Hard</option>
+                            <option value="expert">Expert</option>
+                        </select>
+                    </div>
+                    <div class="setting-card">
+                        <label for="speed-select">Speed</label>
+                        <select id="speed-select" aria-label="Choose speed">
+                            <option value="slow">Slow</option>
+                            <option value="normal" selected>Standard</option>
+                            <option value="fast">Fast</option>
+                            <option value="turbo">Turbo</option>
+                        </select>
+                    </div>
+                    <div class="setting-card">
+                        <label for="obstacle-select">Obstacles</label>
+                        <select id="obstacle-select" aria-label="Choose obstacles">
+                            <option value="none" selected>None</option>
+                            <option value="few">Few</option>
+                            <option value="some">Medium</option>
+                            <option value="many">Many</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-p" id="ov-btn" style="margin-top:0.35rem">
                     <span class="material-icons-round" style="font-size:17px">play_arrow</span>Start Game
                 </button>
             </div>
@@ -196,26 +423,83 @@
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
         const bestEl = document.getElementById('best');
+        const modeLabel = document.getElementById('mode-label');
         const overlay = document.getElementById('overlay');
         const ovEmoji = document.getElementById('ov-emoji');
         const ovTitle = document.getElementById('ov-title');
         const ovSub = document.getElementById('ov-sub');
         const ovBtn = document.getElementById('ov-btn');
+        const settingsPanel = document.getElementById('settings-panel');
+        const levelSelect = document.getElementById('level-select');
+        const speedSelect = document.getElementById('speed-select');
+        const obstacleSelect = document.getElementById('obstacle-select');
 
         const CELL = 20;
-        const SPEED = 130; // ms per step
+        const BASE_SPEED = 130; // ms per step
 
-        let cols, rows, snake, dir, nextDir, food, score, best, ticker;
+        const SPEEDS = {
+            slow: { label: 'Slow', delay: 170 },
+            normal: { label: 'Standard', delay: BASE_SPEED },
+            fast: { label: 'Fast', delay: 95 },
+            turbo: { label: 'Turbo', delay: 72 },
+        };
+
+        const LEVELS = {
+            easy: { label: 'Easy', speedAdjust: 18, bonusObstacles: 0 },
+            normal: { label: 'Normal', speedAdjust: 0, bonusObstacles: 0 },
+            hard: { label: 'Hard', speedAdjust: -13, bonusObstacles: 4 },
+            expert: { label: 'Expert', speedAdjust: -26, bonusObstacles: 8 },
+        };
+
+        const OBSTACLES = {
+            none: { label: 'No Obstacles', count: 0 },
+            few: { label: 'Few Obstacles', count: 6 },
+            some: { label: 'Medium Obstacles', count: 12 },
+            many: { label: 'Many Obstacles', count: 20 },
+        };
+
+        let cols, rows, snake, dir, nextDir, food, score, best, ticker, obstacles;
         let state = 'idle'; // idle | running | paused | dead
-        best = 0;
+        best = Number(localStorage.getItem('snakeBest') || 0);
+        bestEl.textContent = best;
+
+        // ── Mobile viewport sizing ───────────────────────────────
+        function syncViewportHeight() {
+            const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+            document.documentElement.style.setProperty('--app-h', `${Math.round(h)}px`);
+        }
+
+        // ── Current setup ────────────────────────────────────────
+        function getConfig() {
+            const level = LEVELS[levelSelect.value];
+            const speed = SPEEDS[speedSelect.value];
+            const obstacle = OBSTACLES[obstacleSelect.value];
+            const delay = Math.max(54, speed.delay + level.speedAdjust);
+            const obstacleCount = Math.max(0, obstacle.count + level.bonusObstacles);
+            return { level, speed, obstacle, delay, obstacleCount };
+        }
+
+        function updateModeLabel() {
+            const cfg = getConfig();
+            modeLabel.textContent = `${cfg.level.label} · ${cfg.speed.label} · ${cfg.obstacle.label}`;
+        }
 
         // ── Sizing ──────────────────────────────────────────────
         function resize() {
+            syncViewportHeight();
             const wrap = canvas.parentElement;
-            canvas.width = Math.floor(wrap.clientWidth / CELL) * CELL;
-            canvas.height = Math.floor(wrap.clientHeight / CELL) * CELL;
+            const width = Math.max(CELL, Math.floor(wrap.clientWidth / CELL) * CELL);
+            const height = Math.max(CELL, Math.floor(wrap.clientHeight / CELL) * CELL);
+            canvas.width = width;
+            canvas.height = height;
             cols = canvas.width / CELL;
             rows = canvas.height / CELL;
+        }
+
+        function restartTicker() {
+            if (state !== 'running') return;
+            clearInterval(ticker);
+            ticker = setInterval(step, getConfig().delay);
         }
 
         // ── Init game state ──────────────────────────────────────
@@ -226,15 +510,67 @@
             nextDir = { x: 1, y: 0 };
             score = 0;
             scoreEl.textContent = 0;
+            obstacles = buildObstacles();
             food = randomFood();
+            updateModeLabel();
+        }
+
+        function isSnakeCell(cell) {
+            return snake.some(s => s.x === cell.x && s.y === cell.y);
+        }
+
+        function isObstacleCell(cell) {
+            return obstacles.some(o => o.x === cell.x && o.y === cell.y);
+        }
+
+        function isOccupied(cell) {
+            return isSnakeCell(cell) || isObstacleCell(cell) || (food && food.x === cell.x && food.y === cell.y);
+        }
+
+        function inStartSafeZone(cell) {
+            const mx = Math.floor(cols / 2), my = Math.floor(rows / 2);
+            return Math.abs(cell.x - mx) <= 4 && Math.abs(cell.y - my) <= 3;
+        }
+
+        function randomCell() {
+            return { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
+        }
+
+        function buildObstacles() {
+            const cfg = getConfig();
+            const maxSafeCount = Math.max(0, Math.floor(cols * rows * 0.12));
+            const total = Math.min(cfg.obstacleCount, maxSafeCount);
+            const blocks = [];
+            let guard = 0;
+
+            while (blocks.length < total && guard < cols * rows * 8) {
+                guard++;
+                const cell = randomCell();
+                const occupiedBySnake = snake.some(s => s.x === cell.x && s.y === cell.y);
+                const occupiedByBlock = blocks.some(o => o.x === cell.x && o.y === cell.y);
+                if (!occupiedBySnake && !occupiedByBlock && !inStartSafeZone(cell)) blocks.push(cell);
+            }
+
+            return blocks;
         }
 
         function randomFood() {
-            let cell;
-            do {
-                cell = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
-            } while (snake.some(s => s.x === cell.x && s.y === cell.y));
-            return cell;
+            const open = [];
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const cell = { x, y };
+                    if (!isSnakeCell(cell) && !isObstacleCell(cell)) open.push(cell);
+                }
+            }
+
+            if (!open.length) {
+                clearInterval(ticker);
+                state = 'dead';
+                showOverlay('🏆', 'Board Cleared', `Perfect run — you scored ${score}.`, 'Play Again', true);
+                return { x: 0, y: 0 };
+            }
+
+            return open[Math.floor(Math.random() * open.length)];
         }
 
         // ── Drawing ──────────────────────────────────────────────
@@ -258,6 +594,19 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
 
+            // Obstacles
+            obstacles?.forEach(block => {
+                ctx.shadowColor = 'rgba(255,255,255,0.08)';
+                ctx.shadowBlur = 8;
+                ctx.fillStyle = 'rgba(138,153,179,0.28)';
+                fillRR(block.x * CELL + 2, block.y * CELL + 2, CELL - 4, CELL - 4, 5);
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(8,13,26,0.35)';
+                fillRR(block.x * CELL + 7, block.y * CELL + 7, CELL - 14, CELL - 14, 3);
+            });
+
+            if (!food) return;
+
             // Food — cyan glow
             ctx.shadowColor = '#00E5FF';
             ctx.shadowBlur = 14;
@@ -266,7 +615,7 @@
             ctx.shadowBlur = 0;
 
             // Snake segments
-            snake.forEach((seg, i) => {
+            snake?.forEach((seg, i) => {
                 const alpha = 1 - (i / snake.length) * 0.55;
                 ctx.fillStyle = i === 0 ? '#5C9EFF' : `rgba(41,121,255,${(alpha * 0.85).toFixed(2)})`;
                 ctx.shadowColor = i === 0 ? 'rgba(92,158,255,0.55)' : 'transparent';
@@ -284,12 +633,18 @@
                 y: (snake[0].y + dir.y + rows) % rows,
             };
 
-            // Self-collision → game over
-            if (snake.some(s => s.x === head.x && s.y === head.y)) {
+            const hitSelf = snake.some(s => s.x === head.x && s.y === head.y);
+            const hitObstacle = obstacles.some(o => o.x === head.x && o.y === head.y);
+
+            if (hitSelf || hitObstacle) {
                 clearInterval(ticker);
                 state = 'dead';
-                if (score > best) { best = score; bestEl.textContent = best; }
-                showOverlay('💀', 'Game Over', `You scored ${score}. Press Space or click to try again.`, 'Try Again');
+                if (score > best) {
+                    best = score;
+                    bestEl.textContent = best;
+                    localStorage.setItem('snakeBest', String(best));
+                }
+                showOverlay(hitObstacle ? '🧱' : '💀', 'Game Over', `You scored ${score}. Change settings or try again.`, 'Try Again', true);
                 return;
             }
 
@@ -299,6 +654,11 @@
                 score++;
                 scoreEl.textContent = score;
                 food = randomFood();
+
+                // Slight speed ramp on harder levels without changing the selected setup.
+                if ((levelSelect.value === 'hard' || levelSelect.value === 'expert') && score > 0 && score % 5 === 0) {
+                    restartTicker();
+                }
             } else {
                 snake.pop();
             }
@@ -307,11 +667,12 @@
         }
 
         // ── Overlay helpers ──────────────────────────────────────
-        function showOverlay(emoji, title, sub, btnLabel) {
+        function showOverlay(emoji, title, sub, btnLabel, showSettings = false) {
             ovEmoji.textContent = emoji;
             ovTitle.textContent = title;
             ovSub.innerHTML = sub;
             ovBtn.innerHTML = `<span class="material-icons-round" style="font-size:17px">play_arrow</span>${btnLabel}`;
+            settingsPanel.classList.toggle('hidden', !showSettings);
             overlay.classList.remove('hidden');
         }
 
@@ -321,7 +682,7 @@
             init();
             overlay.classList.add('hidden');
             state = 'running';
-            ticker = setInterval(step, SPEED);
+            ticker = setInterval(step, getConfig().delay);
             draw();
         }
 
@@ -329,11 +690,11 @@
             if (state === 'running') {
                 state = 'paused';
                 clearInterval(ticker);
-                showOverlay('⏸', 'Paused', 'Press Space or click to continue.', 'Resume');
+                showOverlay('⏸', 'Paused', 'Press Space, tap Resume, or tap the canvas to continue.', 'Resume', false);
             } else if (state === 'paused') {
                 state = 'running';
                 overlay.classList.add('hidden');
-                ticker = setInterval(step, SPEED);
+                ticker = setInterval(step, getConfig().delay);
             }
         }
 
@@ -368,15 +729,17 @@
         }, { passive: false });
 
         canvas.addEventListener('touchend', e => {
+            e.preventDefault();
             if (!touchStart) return;
-            if (state === 'idle' || state === 'dead') { startGame(); return; }
-            if (state !== 'running') { togglePause(); return; }
+
+            if (state === 'idle' || state === 'dead') { touchStart = null; startGame(); return; }
+            if (state === 'paused') { touchStart = null; togglePause(); return; }
 
             const dx = e.changedTouches[0].clientX - touchStart.x;
             const dy = e.changedTouches[0].clientY - touchStart.y;
             touchStart = null;
 
-            if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return; // tap = pause
+            if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) { togglePause(); return; }
             const nd = Math.abs(dx) > Math.abs(dy)
                 ? (dx > 0 ? { x: 1, y: 0 } : { x: -1, y: 0 })
                 : (dy > 0 ? { x: 0, y: 1 } : { x: 0, y: -1 });
@@ -389,21 +752,42 @@
             else togglePause();
         });
 
-        // ── Resize ───────────────────────────────────────────────
-        window.addEventListener('resize', () => {
-            resize();
-            if (state === 'running' || state === 'paused') {
-                clearInterval(ticker);
-                init();
-                draw();
-                if (state === 'running') ticker = setInterval(step, SPEED);
-            } else {
-                draw();
-            }
+        [levelSelect, speedSelect, obstacleSelect].forEach(select => {
+            select.addEventListener('change', () => {
+                updateModeLabel();
+                if (state === 'running') restartTicker();
+            });
         });
 
+        // ── Resize ───────────────────────────────────────────────
+        let resizeTimer;
+        function handleResize() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                resize();
+                if (state === 'running' || state === 'paused') {
+                    clearInterval(ticker);
+                    init();
+                    draw();
+                    if (state === 'running') ticker = setInterval(step, getConfig().delay);
+                } else {
+                    draw();
+                }
+            }, 120);
+        }
+
+        window.addEventListener('resize', handleResize, { passive: true });
+        window.visualViewport?.addEventListener('resize', handleResize, { passive: true });
+        window.addEventListener('orientationchange', handleResize, { passive: true });
+
         // ── Boot ─────────────────────────────────────────────────
+        syncViewportHeight();
+        updateModeLabel();
+        settingsPanel.classList.remove('hidden');
         resize();
+        obstacles = [];
+        snake = [];
+        food = null;
         draw(); // draw empty grid immediately so canvas isn't blank
     </script>
 </body>
