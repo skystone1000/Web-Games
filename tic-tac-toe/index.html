@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="../assets/css/games.css" />
     <style>
         body {
@@ -74,9 +75,6 @@
         .hero-panel {
             padding: 2rem;
             container-type: size;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         /* Override hub h1 size for this game */
@@ -111,7 +109,6 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 1rem;
-            text-align: center;
         }
 
         .stat-num {
@@ -131,9 +128,6 @@
 
         /* ── Status bar ── */
         .status {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
             gap: 1rem;
             background: var(--bg2);
             border: 1px solid var(--border);
@@ -143,8 +137,6 @@
         }
 
         .turn {
-            display: flex;
-            align-items: center;
             gap: 0.65rem;
             color: var(--text2);
             font-weight: 600;
@@ -232,14 +224,11 @@
         }
 
         .rules {
-            display: flex;
-            flex-direction: column;
             gap: 0.8rem;
             margin: 1.2rem 0;
         }
 
         .rule {
-            display: flex;
             gap: 0.75rem;
             color: var(--text2);
             font-size: 0.88rem;
@@ -252,15 +241,12 @@
         }
 
         .actions {
-            display: flex;
-            flex-direction: column;
             gap: 0.8rem;
             margin-top: 1.4rem;
         }
 
         /* Btn overrides for sidebar buttons */
         .actions .btn {
-            justify-content: center;
             padding: 13px 22px;
             font-weight: 700;
         }
@@ -273,8 +259,6 @@
         }
 
         .history-list {
-            display: flex;
-            flex-direction: column;
             gap: 0.45rem;
             color: var(--text3);
             font-size: 0.82rem;
@@ -346,8 +330,8 @@
             }
 
             .status {
-                align-items: flex-start;
-                flex-direction: column;
+                align-items: flex-start !important;
+                flex-direction: column !important;
             }
 
             .winner-text {
@@ -364,7 +348,7 @@
         <main class="game-area">
             <div class="game-shell">
 
-                <section class="panel hero-panel">
+                <section class="panel hero-panel d-flex align-items-center justify-content-center">
 
                     <div class="board" id="board" aria-label="Tic Tac Toe board">
                         <button class="cell" data-i="0" aria-label="cell 1"></button>
@@ -388,58 +372,58 @@
                     </div>
 
                     <div class="stats" aria-label="scoreboard">
-                        <div class="stat">
+                        <div class="stat text-center">
                             <div class="stat-num" id="xScore">0</div>
                             <div class="stat-lbl">Player X</div>
                         </div>
-                        <div class="stat">
+                        <div class="stat text-center">
                             <div class="stat-num" id="drawScore">0</div>
                             <div class="stat-lbl">Draws</div>
                         </div>
-                        <div class="stat">
+                        <div class="stat text-center">
                             <div class="stat-num" id="oScore">0</div>
                             <div class="stat-lbl">Player O</div>
                         </div>
                     </div>
 
-                    <div class="status">
-                        <div class="turn">
+                    <div class="status d-flex align-items-center justify-content-between">
+                        <div class="turn d-flex align-items-center">
                             <span class="token" id="turnToken">X</span>
                             <span id="turnText">Player X's turn</span>
                         </div>
                         <div class="winner-text" id="resultText">Make your move.</div>
                     </div>
 
-                    <div class="rules">
-                        <div class="rule">
+                    <div class="rules d-flex flex-column">
+                        <div class="rule d-flex">
                             <span class="material-icons-round">looks_one</span>
                             Take turns placing X and O on empty cells.
                         </div>
-                        <div class="rule">
+                        <div class="rule d-flex">
                             <span class="material-icons-round">grid_3x3</span>
                             Three in a row, column, or diagonal wins the round.
                         </div>
-                        <div class="rule">
+                        <div class="rule d-flex">
                             <span class="material-icons-round">emoji_events</span>
                             Scores persist until you reset the match.
                         </div>
                     </div>
 
-                    <div class="actions">
-                        <button class="btn btn-p" id="newRound">
+                    <div class="actions d-flex flex-column">
+                        <button class="btn btn-p d-inline-flex align-items-center justify-content-center gap-2" id="newRound">
                             <span class="material-icons-round" style="font-size:17px">refresh</span>New Round
                         </button>
-                        <button class="btn btn-o" id="resetMatch">
+                        <button class="btn btn-o d-inline-flex align-items-center justify-content-center gap-2" id="resetMatch">
                             <span class="material-icons-round" style="font-size:17px">restart_alt</span>Reset Match
                         </button>
-                        <a href="/" class="btn btn-o">
+                        <a href="/" class="btn btn-o d-inline-flex align-items-center justify-content-center gap-2">
                             <span class="material-icons-round" style="font-size:17px">arrow_back</span>All Games
                         </a>
                     </div>
 
                     <div class="history">
                         <h2>Round History</h2>
-                        <div class="history-list" id="history">
+                        <div class="history-list d-flex flex-column" id="history">
                             <div class="empty">No rounds completed yet.</div>
                         </div>
                     </div>

@@ -48,10 +48,6 @@ a {
     text-decoration: none;
 }
 
-ul {
-    list-style: none;
-}
-
 ::selection {
     background: var(--primary);
     color: #fff;
@@ -114,9 +110,6 @@ section {
 
 /* ── Buttons ─────────────────────────────────────────────── */
 .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
     padding: 13px 26px;
     border-radius: 50px;
     font-weight: 600;
@@ -188,9 +181,6 @@ nav {
     right: 0;
     z-index: 900;
     height: 66px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     padding: 0 6vw;
     transition: background var(--ease), box-shadow var(--ease);
 }
@@ -214,7 +204,6 @@ nav.scrolled {
 }
 
 .nav-links {
-    display: flex;
     gap: 2rem;
 }
 
@@ -248,7 +237,6 @@ nav.scrolled {
 
 .burger {
     display: none;
-    flex-direction: column;
     gap: 5px;
     cursor: pointer;
     background: none;
@@ -265,19 +253,15 @@ nav.scrolled {
 }
 
 .mob-nav {
-    display: none;
     position: fixed;
     inset: 0;
     z-index: 950;
     background: var(--bg);
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     gap: 2.5rem;
 }
 
 .mob-nav.open {
-    display: flex;
+    display: flex !important;
 }
 
 .mob-nav a {
@@ -333,8 +317,6 @@ body:has(.game-viewport) {
 .hub-hero {
     min-height: 52vh;
     padding: 126px 6vw 60px;
-    display: flex;
-    align-items: center;
     position: relative;
     overflow: hidden;
 }
@@ -360,9 +342,6 @@ body:has(.game-viewport) {
 }
 
 .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
     background: var(--accent-dim);
     border: 1px solid rgba(0, 229, 255, 0.22);
     color: var(--accent);
@@ -388,6 +367,7 @@ h1 {
     letter-spacing: -2px;
     line-height: 1.05;
     max-width: 760px;
+    margin-bottom: 0;
 }
 
 .hub-hero h1 span {
@@ -403,20 +383,12 @@ h1 {
 }
 
 /* ── Game card grid ──────────────────────────────────────── */
-.game-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-}
-
 .game-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--r);
     padding: 1.75rem;
     min-height: 285px;
-    display: flex;
-    flex-direction: column;
     position: relative;
     overflow: hidden;
     transition: transform var(--ease), border-color var(--ease), box-shadow var(--ease);
@@ -478,8 +450,6 @@ h1 {
 }
 
 .tags {
-    display: flex;
-    flex-wrap: wrap;
     gap: 6px;
     margin-bottom: 1.25rem;
 }
