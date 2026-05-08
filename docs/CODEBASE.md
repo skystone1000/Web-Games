@@ -113,3 +113,81 @@ CSS overrides in game's `<style>`:
 6. Add `body { overflow: hidden }` in `<style>`
 7. Load `../assets/js/games.js` before game script
 8. Add `<article class="game-card">` to `index.html` game grid
+
+---
+
+### `2048/index.html` — 2048 Puzzle
+Self-contained. Layout B (two-column panels). No scroll.
+
+Key variables: `board` (4×4 number matrix), `score`, `best` (localStorage `"2048Best"`), `moves`.
+
+Key functions:
+- `slideRow(row)` — strips zeros, merges adjacent equals left-to-right, pads with zeros
+- `move(dir)` — applies `slideRow` across all rows/columns for a direction, spawns tile
+- `spawnTile()` — places a 2 (90%) or 4 (10%) in a random empty cell
+- `renderBoard()` — rebuilds absolutely-positioned tile divs in `#tile-layer`; uses `TILE_COLORS` map
+- `checkGameOver()` — detects 2048 win and board-full lose states
+
+Tiles are `position:absolute` divs moved via CSS `transform:translate()` with `transition:transform 0.1s ease`.
+
+---
+
+### `wordle/index.html` — Wordle Word Game
+Self-contained. Layout B (two-column panels). Scroll below 700px.
+
+Key variables: `secret` (uppercase 5-letter word), `currentRow` (0–5), `currentGuess` (letter array), `stats` object, `ANSWERS` array, `VALID_WORDS` Set.
+
+Key functions:
+- `evaluateGuess(guess, secret)` — two-pass algorithm; returns array of `'correct'|'present'|'absent'`
+- `revealRow(rowIdx, results)` — CSS `rotateX` flip with 80ms stagger; colour applied mid-flip
+- `submitGuess()` — validates, evaluates, reveals, checks win/loss
+- `updateKeyboard(word, results)` — updates on-screen key colours (green > yellow > grey)
+- `showToast(msg)` — fades in/out pill above grid; auto-dismisses 1.8s
+
+---
+
+### `breakout/index.html` — Breakout Arcade
+Self-contained. Layout A (fullscreen canvas). HUD is an absolute `<div>` above canvas.
+
+State machine: `idle | running | paused | dead`.
+
+Key variables: `ball {x,y,vx,vy,destroyed}`, `paddle {x,y,w,h}`, `bricks[]`, `keys` Set, `level`, `lives`.
+
+Key functions:
+- `reflectPaddle()` — hit pos normalised to −1..1, angle = hitPos × (π/3), decomposed to vx/vy
+- `initLevel()` — positions 7×5 brick grid, paddle, and ball for current level
+- `loop()` → `update()` + `draw()` — RAF game loop; `keys` Set tracks held keyboard keys
+- `resize()` — resizes canvas to wrapper, called on init and window resize
+
+---
+
+### `minesweeper/index.html` — Minesweeper
+Self-contained. Layout B (two-column panels). Scroll below 768px.
+
+Key variables: `grid[][]` (`{mine,revealed,flagged,adjacent}`), `diff` string, `firstClick` bool, `DIFFICULTIES` config object.
+
+Key functions:
+- `buildGrid()` — creates empty grid for selected difficulty, resets all state
+- `placeMines(safeRow, safeCol)` — places mines post-first-click; 3×3 safe zone; computes adjacency
+- `reveal(r, c)` — recursive flood fill for zero-adjacent cells
+- `handleClick(r, c)` — first-click mine placement then reveal; chord-click on revealed numbers
+- `handleRightClick(r, c)` — toggles flag; long-press (500ms touchstart) on mobile with `vibrate(30)`
+
+Context menu suppressed on grid (`contextmenu` → `e.preventDefault()`).
+
+---
+
+### `flappy-bird/index.html` — Flappy Bird
+Self-contained. Layout A (fullscreen canvas).
+
+State machine: `idle | running | dead`.
+
+Key variables: `bird {x,y,vy,angle}`, `pipes[]` (`{x,gapY,scored}`), `stars[]`, constants `GRAVITY=0.4`, `FLAP_VY=−7`, `PIPE_GAP=150`.
+
+Key functions:
+- `gameLoop(timestamp)` — delta-time RAF (capped 50ms); normalises to 60fps via `dt = delta/16.67`
+- `update(delta)` — bird physics, pipe scroll + scoring, star parallax, AABB collision
+- `drawBird(x,y,angle,wingUp)` — canvas path: yellow circle, ellipse wing, orange beak triangle, eye
+- `drawPipe(x, gapY)` — dark green body rects + lighter cap rects (6px wider each side)
+- `flap()` — applies `FLAP_VY` impulse; starts game from idle/dead
+- `die()` — freezes loop, sets death pose angle, shows overlay after 600ms

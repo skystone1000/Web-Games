@@ -146,3 +146,124 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 - CSS 3D card flip via `perspective` + `rotateY(180deg)` on `.card-inner`
 - Flip duration: 480ms cubic-bezier easing
 - Matched cards stay face-up with a cyan border glow
+
+---
+
+## 2048 (`/2048/`)
+
+### Gameplay
+- Single-player sliding tile puzzle on a 4×4 grid
+- Arrow keys / WASD / swipe to slide all tiles in one direction
+- Matching tiles merge (e.g. 4+4→8); score increments by merged value
+- Win condition: reach a tile with value 2048 (player may keep going)
+- Game over: board full with no possible merges
+
+### Layout
+- Two-column panel layout: left = 4×4 board, right = sidebar
+- No page scroll; collapses to single column on narrow screens
+
+### Stats
+- Score (current game), Best (persists `"2048Best"`), Moves (total slides)
+
+### Visual feedback
+- Per-tile colour palette: 2–4 dark blue, 8–64 orange/red, 128–512 yellow, 1024 blue, 2048 cyan
+- Spawn animation: `scale(0)→scale(1)` over 150ms; merge pop: `scale(1.15)→scale(1)` over 120ms
+- Win and game-over overlays
+
+---
+
+## Wordle (`/wordle/`)
+
+### Gameplay
+- Single-player word guessing: 5-letter secret word, 6 tries
+- Each guess evaluated: correct (green), present (yellow), absent (grey)
+- Only valid 5-letter words accepted (bundled word list, works offline)
+
+### Layout
+- Two-column panel layout: left = 6×5 grid + on-screen keyboard, right = sidebar
+- Scroll allowed below 700px
+
+### Stats
+- Played (`"wordlePlayed"`), Wins (`"wordleWins"`), Streak (`"wordleStreak"`)
+
+### Visual feedback
+- Tile flip reveal: CSS `rotateX` with 80ms stagger between tiles; colour applied mid-flip
+- Scale-bounce on letter type; shake on invalid word; bounce on winning row
+- Toast notifications (auto-dismiss 1.8s)
+- On-screen keyboard mirrors tile colour state (green > yellow > grey precedence)
+
+---
+
+## Breakout (`/breakout/`)
+
+### Gameplay
+- Single-player arcade: bounce ball off paddle to destroy 7×5 brick grid
+- Top rows worth more (50/30pts); rows 3–5 worth 10pts each
+- Level clears when all bricks destroyed; bricks regenerate at next level
+- 3 lives; game over when all lost; 2-hit bricks introduced from level 2
+
+### Controls
+| Input | Action |
+|---|---|
+| Arrow Left/Right or A/D | Move paddle (velocity-based, hold to move) |
+| Mouse move | Paddle follows cursor X |
+| Touch drag | Paddle follows finger X |
+| Space | Start / pause / resume |
+
+### HUD
+- Score, Best (`"breakoutBest"`), Lives (❤ icons), Level — absolute bar above canvas
+
+### Visual feedback
+- Ball: white circle with cyan glow; Paddle: gradient blue rounded rect
+- Brick row colours: cyan, light blue, purple, amber, red
+- 2-hit bricks appear darker; flash white on each hit; level-clear flash + 400ms pause
+
+---
+
+## Minesweeper (`/minesweeper/`)
+
+### Gameplay
+- Single-player logic: reveal all non-mine cells without hitting a mine
+- Difficulties: Easy (9×9, 10 mines), Medium (16×16, 40 mines), Hard (30×16, 99 mines)
+- First click always safe (mines placed after first reveal)
+- Flood-fill reveals connected zero-adjacent cells; chord click auto-reveals neighbours
+
+### Controls
+| Control | Action |
+|---|---|
+| Left-click | Reveal cell |
+| Right-click | Toggle flag 🚩 |
+| Long-press 500ms (mobile) | Toggle flag + haptic vibrate |
+| Difficulty pills | Change grid, reset board |
+
+### Stats
+- Mines Left, Time (mm:ss, starts on first click), Best Time per difficulty
+
+### Visual feedback
+- Numbers colour-coded (1=blue, 2=green, 3=red, 4=dark blue, 5=maroon, 6=teal, 7=white, 8=grey)
+- Mine hit: red flash, all mines revealed (💣 / 🔴 for wrong flags)
+- Win: remaining mines auto-flagged
+
+---
+
+## Flappy Bird (`/flappy-bird/`)
+
+### Gameplay
+- Single-player endless arcade: flap through infinite pipe gauntlet
+- Score = pipe pairs passed; best persists across sessions via `"flappyBest"`
+
+### Controls
+| Input | Action |
+|---|---|
+| Space | Flap / start |
+| Click or tap canvas | Flap |
+| Overlay button | Start / Try Again |
+
+### Physics
+- Gravity 0.4 px/frame; flap impulse −7 px/frame; terminal fall 10 px/frame
+- Delta-time RAF loop capped at 50ms; bird rotation −25° to +75°
+
+### Visual feedback
+- Bird: yellow circle + orange beak + eye, drawn with canvas paths; wing flaps at ~8fps
+- Pipes: dark green body with lighter caps; parallax star layer at 0.5× pipe speed
+- Score drawn large and centred on canvas; death 600ms delay before overlay
