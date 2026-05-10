@@ -191,3 +191,185 @@ Key functions:
 - `drawPipe(x, gapY)` — dark green body rects + lighter cap rects (6px wider each side)
 - `flap()` — applies `FLAP_VY` impulse; starts game from idle/dead
 - `die()` — freezes loop, sets death pose angle, shows overlay after 600ms
+
+---
+
+### `tetris/index.html` — Tetris
+Self-contained. Layout B (two-column panels). Left panel: 10×20 CSS grid canvas. Right sidebar: stats + next piece preview.
+
+State machine: `idle | running | paused | dead`.
+
+Key variables: `board[][]` (10×20), `currentPiece {type,x,y,rotation}`, `bag[]` (7-bag shuffle), `ghostY`, `lockTimer`, `level`, `lines`, `score`.
+
+Key functions:
+- `spawnPiece()` — draws from bag; game-over if spawn position is blocked
+- `rotate(piece, dir)` — SRS rotation matrix; tries up to 3 wall-kick offsets from `KICKS` table
+- `tryMove(dx, dy)` — collision-checks and moves piece; returns boolean success
+- `hardDrop()` — teleports piece to ghost position, scores 2×rows dropped, locks immediately
+- `lockPiece()` — writes piece to board; calls `clearLines()`; resets lock timer
+- `clearLines()` — scans board top-to-bottom; removes full rows, shifts rows down; adds score
+- `drawBoard()` — renders board cells as coloured `div` backgrounds via CSS grid
+- `drawGhost()` — projects piece straight down to lowest valid position
+
+---
+
+### `pong/index.html` — Pong
+Self-contained. Layout A (fullscreen canvas).
+
+State machine: `idle | running | dead`.
+
+Key variables: `ball {x,y,vx,vy,speed}`, `player {y,score}`, `ai {y,score}`, `trail[]` (last 5 ball positions), constants `PADDLE_H=80`, `BALL_R=8`, `WIN_SCORE=7`.
+
+Key functions:
+- `gameLoop(ts)` — RAF loop; calls `update()` then `draw()`
+- `update()` — ball physics, wall bounce, paddle collision with angle deflection, AI tracking
+- `aiMove()` — tracks ball.y at 75% ball speed; capped to canvas bounds
+- `ballHitPaddle(paddle)` — deflects ball; increases speed by 5%; adjusts angle by hit offset
+- `draw()` — renders paddles, ball trail, ball, score, net dashes
+- `serve(scorer)` — resets ball to centre with random vertical angle toward the scorer
+
+---
+
+### `connect-four/index.html` — Connect Four
+Self-contained. Layout B (two-column panels). Left panel: 7×6 CSS grid board. Right sidebar: turn indicator + scores.
+
+State machine: `idle | running | won`.
+
+Key variables: `grid[][]` (7 cols × 6 rows), `currentPlayer` (1 or 2), `scores[]`.
+
+Key functions:
+- `dropDisc(col)` — finds lowest empty row in column; places disc; animates CSS `translateY`
+- `checkWin(col, row)` — checks all 4 directions (horizontal, vertical, 2 diagonals) from placed cell; marks winning cells
+- `getLowestRow(col)` — scans column from bottom for first empty cell
+- `renderBoard()` — re-renders all 42 cells as coloured divs with transition classes
+- `highlightWin(cells)` — adds `win-pulse` class to winning cell elements
+
+---
+
+### `whack-a-mole/index.html` — Whack-a-Mole
+Self-contained. Layout C (centered board). 3×3 mole hole grid.
+
+State machine: `idle | running | dead`.
+
+Key variables: `score`, `best`, `timeLeft` (30s countdown), `activeMoles` set, `difficultyRamped` flag.
+
+Key functions:
+- `startGame()` — resets counters, starts countdown interval, calls `scheduleNextMole()`
+- `scheduleNextMole()` — sets random timeout; picks random hole; spawns normal or golden mole
+- `spawnMole(holeIdx, isGolden)` — adds `active` class to hole element; sets retreat timeout
+- `whack(holeIdx)` — scores hit, removes `active` class, spawns floating score text, calls `scheduleNextMole()`
+- `showFloatingScore(hole, pts)` — creates absolutely-positioned element; animates translateY + opacity
+- `endGame()` — stops all timers, saves best, shows overlay
+
+---
+
+### `simon/index.html` — Simon
+Self-contained. Layout C (centered board). 2×2 CSS grid quadrant buttons.
+
+State machine: `idle | showing | input | dead`.
+
+Key variables: `sequence[]`, `playerIndex`, `round`, `best`, `speedMs` (flash duration tier).
+
+Key functions:
+- `nextRound()` — pushes random colour to sequence; sets `showing` state; calls `playSequence()`
+- `playSequence()` — iterates sequence with `setTimeout` delays; flashes each quadrant + plays tone
+- `flashButton(colour)` — adds `active` class for `speedMs`ms; plays Web Audio oscillator at colour frequency
+- `playerPress(colour)` — validates against `sequence[playerIndex]`; advances or triggers `gameOver()`
+- `gameOver()` — flashes all quadrants red; shows overlay after animation; saves best
+- `createTone(freq)` — creates Web Audio `OscillatorNode` + `GainNode`; plays for 350ms
+
+---
+
+### `hangman/index.html` — Hangman
+Self-contained. Layout C (centered board). Inline SVG gallows + letter button grid.
+
+State machine: `idle | running | won | dead`.
+
+Key variables: `word`, `category`, `guessed` Set, `wrongCount` (0–6), `streak`, `WORDS` object (5 category arrays).
+
+Key functions:
+- `newGame()` — picks random category and word; resets SVG path visibility; resets letter buttons
+- `guess(letter)` — checks if letter is in word; increments `wrongCount` or fills blanks; calls `checkWin()`
+- `revealPart(n)` — animates the nth SVG path via `stroke-dashoffset` from full length to 0
+- `updateBlanks()` — re-renders word display as `_` or revealed letter spans
+- `checkWin()` — all letters guessed → won state; `wrongCount===6` → dead state
+- `saveStreak()` — persists win streak to `localStorage["hangmanStreak"]`
+
+SVG gallows parts drawn in order: gallows frame (3 paths) → head circle → torso → left arm → right arm → left leg → right leg.
+
+---
+
+### `asteroids/index.html` — Asteroids
+Self-contained. Layout A (fullscreen canvas).
+
+State machine: `idle | running | dead`.
+
+Key variables: `ship {x,y,vx,vy,angle,thrusting,invincible}`, `bullets[]`, `asteroids[]`, `particles[]`, `lives`, `score`, `wave`.
+
+Key functions:
+- `gameLoop(ts)` — delta-time RAF (capped 50ms); calls `update(dt)` + `draw()`
+- `update(dt)` — ship physics (thrust/rotate/friction/wrap), bullet movement + lifetime, asteroid movement + wrap, collision detection
+- `spawnWave()` — creates `3 + wave` large asteroids with random polygon vertices; skips spawn-safe zone around ship
+- `splitAsteroid(a, bullet)` — removes asteroid; spawns 2 children at next smaller size (or nothing if small)
+- `drawAsteroid(a)` — stroked polygon path using pre-computed vertex offsets
+- `drawShip(s)` — triangle path + optional thruster flame; blinks when invincible
+- `spawnParticles(x, y, count, speed)` — pushes line-segment explosion particles
+- `wrapPos(obj)` — wraps x/y to opposite edge when out of canvas bounds
+
+---
+
+### `sudoku/index.html` — Sudoku
+Self-contained. Layout B (two-column panels). Left panel: 9×9 CSS grid board. Right sidebar: difficulty selector + timer + stats + number pad.
+
+State machine: `idle | running | won`.
+
+Key variables: `puzzles` object (3 difficulty arrays of 81-char strings), `solutions` matching array, `board[]` (81 cells), `selected` index, `notesMode`, `elapsed`, `timerInterval`.
+
+Key functions:
+- `loadPuzzle(difficulty)` — picks random puzzle for difficulty; populates `board[]`; renders grid
+- `selectCell(idx)` — sets `selected`; highlights peers (same row/col/box) and same-number cells
+- `enterDigit(d)` — sets or clears `board[selected].value`; validates against solution; starts timer on first entry
+- `toggleNote(idx, d)` — adds/removes candidate digit in `board[idx].notes` Set; updates cell micro-grid
+- `checkWin()` — all non-given cells correct → triggers win animation
+- `giveHint()` — finds first wrong/empty cell; reveals correct value after 500ms; adds 30s to `elapsed`
+- `renderCell(idx)` — updates cell DOM: value or notes micro-grid; applies selected/peer/mistake classes
+- `winAnimation()` — iterates cells left-to-right with 30ms stagger; adds green shimmer class
+
+---
+
+### `dino-run/index.html` — Dino Run
+Self-contained. Layout A (fullscreen canvas).
+
+State machine: `idle | running | dead`.
+
+Key variables: `dino {x,y,vy,ducking,jumping,frame}`, `obstacles[]` `{type,x,w,h,variant,height}`, `speed`, `score`, `best`, `nightMode`, `nightProgress`.
+
+Key functions:
+- `gameLoop(ts)` — delta-time RAF (capped 50ms); normalises to 60fps
+- `update(dt)` — dino physics (jump/gravity/duck), obstacle scroll + spawn, collision (80% hitbox), speed ramp, score increment, night cycle fade
+- `spawnObstacle()` — random cactus variant or pterodactyl (after score 200); enforces minimum gap
+- `drawDino(dt)` — rect-based sprite: body, head, eye, arms, alternating legs (run), flat legs (duck/jump)
+- `drawPterodactyl(o)` — two wing frames alternating every 12 ticks
+- `drawCactus(o)` — variant-specific rect compositions (small/tall/double)
+- `checkCollision(dino, obs)` — AABB check with 80%/50% hitbox scaling
+- `die()` — freezes game loop; saves best; shows game-over overlay after 400ms
+
+---
+
+### `bubble-shooter/index.html` — Bubble Shooter
+Self-contained. Layout A (fullscreen canvas).
+
+State machine: `idle | aiming | firing | popping | dead`.
+
+Key variables: `grid[][]` (rows × cols of colour strings or null), `shooter {angle,current,next}`, `firedBubble {x,y,vx,vy}`, `particles[]`, `shotsSincePop`, `level`, `score`, `best`.
+
+Key functions:
+- `gameLoop(ts)` — RAF loop; calls `update()` + `draw()`
+- `hexToPixel(row, col)` — converts grid coordinates to canvas pixel centre using hex-offset math
+- `pixelToHex(x, y)` — finds nearest grid cell for a canvas position; snaps fired bubble on contact
+- `bfsPop(row, col, colour)` — BFS from placed cell; returns all connected same-colour cells (pops if ≥3)
+- `bfsFloating()` — BFS from row-0 cells; returns all cells not connected to ceiling (they drop)
+- `castRay(angle)` — traces aim guide path with one wall reflection; returns array of line segments
+- `drawBubble(x, y, colour, r)` — radial gradient fill + white specular highlight at top-left
+- `spawnParticles(x, y, colour)` — 6–8 radial spark particles for pop animation
+- `descentCheck()` — after 10 shots without a pop, shifts entire grid down one row; checks danger line

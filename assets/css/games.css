@@ -235,6 +235,22 @@ nav.scrolled {
     width: 100%;
 }
 
+.nav-btn {
+    padding: 8px 20px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 50px;
+    font-size: 0.87rem;
+    font-weight: 600;
+    transition: background var(--ease), transform var(--ease), box-shadow var(--ease);
+}
+
+.nav-btn:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(41, 121, 255, 0.45);
+}
+
 .burger {
     display: none;
     gap: 5px;
@@ -519,7 +535,8 @@ h1 {
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 640px) {
-    .nav-links {
+    .nav-links,
+    .nav-btn  {
         display: none;
     }
 

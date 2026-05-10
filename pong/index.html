@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<title>Pong — Games</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<link rel="stylesheet" href="../assets/css/games.css" />
+	<style>
+		html,
+		body {
+			overflow: hidden;
+			height: 100%;
+			width: 100%;
+		}
+
+		body {
+			position: fixed;
+			inset: 0;
+			touch-action: none;
+		}
+
+		/* Force nav glass — no scroll on game pages */
+		nav {
+			background: rgba(8, 13, 26, 0.92);
+			backdrop-filter: blur(18px);
+			-webkit-backdrop-filter: blur(18px);
+			box-shadow: 0 1px 0 var(--border);
+		}
+
+		/* Ambient background */
+		body::before {
+			content: '';
+			position: fixed;
+			inset: 0;
+			pointer-events: none;
+			z-index: 0;
+			background:
+				radial-gradient(ellipse 80% 60% at 70% 40%, rgba(41, 121, 255, 0.14) 0%, transparent 70%),
+				radial-gradient(ellipse 45% 45% at 15% 85%, rgba(0, 229, 255, 0.08) 0%, transparent 60%);
+		}
+
+		.game-viewport {
+			flex-direction: column;
+			align-items: stretch;
+			justify-content: flex-start;
+			width: 100vw;
+			height: 100dvh;
+			padding-top: 66px;
+		}
+
+		#canvas-wrap {
+			flex: 1 1 auto;
+			width: 100%;
+			min-height: 0;
+			position: relative;
+			overflow: hidden;
+		}
+
+		#game-canvas {
+			display: block;
+			width: 100%;
+			height: 100%;
+			touch-action: none;
+		}
+
+		/* Overlay */
+		#overlay {
+			position: absolute;
+			inset: 0;
+			z-index: 10;
+			gap: 0.85rem;
+			padding: 18px;
+			background: rgba(8, 13, 26, 0.82);
+			backdrop-filter: blur(6px);
+			-webkit-backdrop-filter: blur(6px);
+		}
+
+		#overlay.hidden {
+			display: none !important;
+		}
+
+		.ov-emoji {
+			font-size: clamp(2.1rem, 8vw, 3.2rem);
+			line-height: 1;
+		}
+
+		.ov-title {
+			font-size: clamp(1.15rem, 4vw, 1.5rem);
+			font-weight: 800;
+			color: var(--text);
+		}
+
+		.ov-sub {
+			font-size: 0.85rem;
+			color: var(--text2);
+			text-align: center;
+			max-width: min(440px, 92vw);
+			line-height: 1.5;
+		}
+
+		/* Controls hint */
+		.hints {
+			position: absolute;
+			bottom: 12px;
+			right: 16px;
+			gap: 8px;
+			pointer-events: none;
+			z-index: 5;
+		}
+
+		.hint {
+			gap: 4px;
+			font-size: 0.68rem;
+			color: var(--text3);
+		}
+
+		.k {
+			display: inline-block;
+			padding: 1px 6px;
+			background: var(--surface2);
+			border: 1px solid var(--border);
+			border-radius: 4px;
+			font-family: monospace;
+			font-size: 0.7rem;
+			color: var(--text2);
+		}
+
+		@media (max-width: 640px) {
+			.hints {
+				display: none !important;
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<div id="header-placeholder"></div>
+
+	<div class="game-viewport">
+		<div id="canvas-wrap">
+			<canvas id="game-canvas"></canvas>
+
+			<div id="overlay" class="d-flex flex-column align-items-center justify-content-center">
+				<div class="ov-emoji" id="ov-emoji">🏓</div>
+				<div class="ov-title" id="ov-title">Pong</div>
+				<div class="ov-sub" id="ov-sub">Move with <strong>↑ ↓</strong> or <strong>W S</strong>. First to 7 wins.<br>Press <strong>Space</strong> to pause during play.</div>
+				<button class="btn btn-p d-inline-flex align-items-center gap-2" id="ov-btn" style="margin-top:0.35rem">
+					<span class="material-icons-round" style="font-size:17px">play_arrow</span>Start Game
+				</button>
+			</div>
+
+			<div class="hints d-flex flex-column align-items-end">
+				<span class="hint d-inline-flex align-items-center"><span class="k">↑ ↓</span>&nbsp;/&nbsp;<span class="k">W S</span>&nbsp;move paddle</span>
+				<span class="hint d-inline-flex align-items-center"><span class="k">Space</span>&nbsp;pause</span>
+			</div>
+		</div>
+	</div>
+
+	<script src="../assets/js/games.js"></script>
+	<script>
+		const canvas = document.getElementById('game-canvas');
+		const ctx = canvas.getContext('2d');
+		const overlay = document.getElementById('overlay');
+		const ovEmoji = document.getElementById('ov-emoji');
+		const ovTitle = document.getElementById('ov-title');
+		const ovSub = document.getElementById('ov-sub');
+		const ovBtn = document.getElementById('ov-btn');
+
+		// ── Constants ────────────────────────────────────────────────
+		const PADDLE_W      = 12;
+		const PADDLE_H      = 80;
+		const PADDLE_MARGIN = 20;
+		const BALL_R        = 5;
+		const INITIAL_SPEED = 5;
+		const PADDLE_SPEED  = 7;
+		const WINNING_SCORE = 7;
+		const TRAIL_LEN     = 5;
+
+		// ── State ────────────────────────────────────────────────────
+		let state = 'idle'; // idle | running | paused | dead
+		let playerScore, aiScore, playerPaddle, aiPaddle, ball, trail, flashTimer, pauseAfterPoint;
+		let animId, lastTime;
+		let bestStreak = Number(localStorage.getItem('pongBest') || 0);
+		let currentStreak = 0;
+
+		// Input state
+		const keys = {};
+
+		// ── Canvas sizing ────────────────────────────────────────────
+		function resize() {
+			const wrap = canvas.parentElement;
+			canvas.width  = wrap.clientWidth;
+			canvas.height = wrap.clientHeight;
+		}
+
+		// ── Init ─────────────────────────────────────────────────────
+		function initGame() {
+			const W = canvas.width, H = canvas.height;
+			playerScore = 0;
+			aiScore     = 0;
+			trail       = [];
+			flashTimer  = 0;
+			pauseAfterPoint = 0;
+
+			playerPaddle = {
+				x: PADDLE_MARGIN,
+				y: H / 2 - PADDLE_H / 2,
+			};
+			aiPaddle = {
+				x: W - PADDLE_MARGIN - PADDLE_W,
+				y: H / 2 - PADDLE_H / 2,
+			};
+
+			launchBall(true);
+		}
+
+		function launchBall(towardPlayer) {
+			const W = canvas.width, H = canvas.height;
+			// Random shallow angle: ±25°
+			const angleDeg = (Math.random() * 50 - 25);
+			const angleRad = angleDeg * Math.PI / 180;
+			const dir = towardPlayer ? -1 : 1;
+
+			ball = {
+				x: W / 2,
+				y: H / 2,
+				speed: INITIAL_SPEED,
+				vx: dir * INITIAL_SPEED * Math.cos(angleRad),
+				vy: INITIAL_SPEED * Math.sin(angleRad),
+			};
+			trail = [];
+		}
+
+		// ── Paddle deflection ────────────────────────────────────────
+		function reflectPaddle(paddle) {
+			const hitPos = (ball.y - (paddle.y + PADDLE_H / 2)) / (PADDLE_H / 2); // -1 to 1
+			const angle  = hitPos * (Math.PI / 3); // max 60°
+			const spd    = Math.min(ball.speed * 1.05, INITIAL_SPEED * 3);
+			ball.speed   = spd;
+			// Reverse X direction
+			const newVx  = (ball.vx > 0 ? -1 : 1) * Math.abs(spd * Math.cos(angle));
+			const newVy  = spd * Math.sin(angle);
+			ball.vx = newVx;
+			ball.vy = newVy;
+			flashTimer = 1; // 1-frame white flash
+		}
+
+		// ── Game loop (delta-time) ───────────────────────────────────
+		function gameLoop(timestamp) {
+			if (state !== 'running') return;
+			const rawDelta = timestamp - (lastTime || timestamp);
+			const delta    = Math.min(rawDelta, 50);
+			lastTime       = timestamp;
+			update(delta);
+			draw();
+			animId = requestAnimationFrame(gameLoop);
+		}
+
+		function startLoop() {
+			lastTime = 0;
+			animId   = requestAnimationFrame(gameLoop);
+		}
+
+		// ── Update ───────────────────────────────────────────────────
+		function update(delta) {
+			const W = canvas.width, H = canvas.height;
+			const dt = delta / 16.67; // normalise to 60fps
+
+			// Post-goal pause countdown
+			if (pauseAfterPoint > 0) {
+				pauseAfterPoint -= delta;
+				return;
+			}
+
+			// Player paddle movement
+			if (keys['ArrowUp'] || keys['w'] || keys['W']) {
+				playerPaddle.y = Math.max(0, playerPaddle.y - PADDLE_SPEED * dt);
+			}
+			if (keys['ArrowDown'] || keys['s'] || keys['S']) {
+				playerPaddle.y = Math.min(H - PADDLE_H, playerPaddle.y + PADDLE_SPEED * dt);
+			}
+
+			// AI paddle: tracks ball Y at 75% of ball speed (no snapping)
+			const aiCenter = aiPaddle.y + PADDLE_H / 2;
+			const aiTarget = ball.y;
+			const aiMaxMove = ball.speed * 0.75 * dt;
+			if (aiCenter < aiTarget - 2) {
+				aiPaddle.y = Math.min(H - PADDLE_H, aiPaddle.y + aiMaxMove);
+			} else if (aiCenter > aiTarget + 2) {
+				aiPaddle.y = Math.max(0, aiPaddle.y - aiMaxMove);
+			}
+
+			// Trail: record current ball position before move
+			trail.push({ x: ball.x, y: ball.y });
+			if (trail.length > TRAIL_LEN) trail.shift();
+
+			// Ball movement
+			ball.x += ball.vx * dt;
+			ball.y += ball.vy * dt;
+
+			// Wall bounces (top/bottom)
+			if (ball.y - BALL_R <= 0) {
+				ball.y  = BALL_R;
+				ball.vy = Math.abs(ball.vy);
+				flashTimer = 1;
+			} else if (ball.y + BALL_R >= H) {
+				ball.y  = H - BALL_R;
+				ball.vy = -Math.abs(ball.vy);
+				flashTimer = 1;
+			}
+
+			// Player paddle collision (left)
+			const px = playerPaddle.x;
+			const py = playerPaddle.y;
+			if (
+				ball.vx < 0 &&
+				ball.x - BALL_R <= px + PADDLE_W &&
+				ball.x + BALL_R >= px &&
+				ball.y + BALL_R >= py &&
+				ball.y - BALL_R <= py + PADDLE_H
+			) {
+				ball.x = px + PADDLE_W + BALL_R; // push out of paddle
+				reflectPaddle(playerPaddle);
+			}
+
+			// AI paddle collision (right)
+			const ax = aiPaddle.x;
+			const ay = aiPaddle.y;
+			if (
+				ball.vx > 0 &&
+				ball.x + BALL_R >= ax &&
+				ball.x - BALL_R <= ax + PADDLE_W &&
+				ball.y + BALL_R >= ay &&
+				ball.y - BALL_R <= ay + PADDLE_H
+			) {
+				ball.x = ax - BALL_R; // push out of paddle
+				reflectPaddle(aiPaddle);
+			}
+
+			// Scoring
+			if (ball.x - BALL_R < 0) {
+				// AI scores
+				aiScore++;
+				checkGameOver();
+				if (state === 'running') {
+					pauseAfterPoint = 1000;
+					launchBall(false); // toward AI after AI scores (player serves)
+					setTimeout(() => { pauseAfterPoint = 0; }, 1000);
+				}
+			} else if (ball.x + BALL_R > W) {
+				// Player scores
+				playerScore++;
+				checkGameOver();
+				if (state === 'running') {
+					pauseAfterPoint = 1000;
+					launchBall(true); // toward player after player scores (AI serves)
+					setTimeout(() => { pauseAfterPoint = 0; }, 1000);
+				}
+			}
+
+			// Tick down flash
+			if (flashTimer > 0) flashTimer--;
+		}
+
+		function checkGameOver() {
+			if (playerScore >= WINNING_SCORE) {
+				endGame(true);
+			} else if (aiScore >= WINNING_SCORE) {
+				endGame(false);
+			}
+		}
+
+		function endGame(won) {
+			state = 'dead';
+			cancelAnimationFrame(animId);
+			draw(); // final frame
+
+			if (won) {
+				currentStreak++;
+				if (currentStreak > bestStreak) {
+					bestStreak = currentStreak;
+					localStorage.setItem('pongBest', bestStreak);
+				}
+			} else {
+				currentStreak = 0;
+			}
+
+			setTimeout(() => {
+				ovEmoji.textContent = won ? '🎉' : '💀';
+				ovTitle.textContent = won ? 'You Win!' : 'You Lose';
+				ovSub.innerHTML = won
+					? `Score: <strong>${playerScore} – ${aiScore}</strong>&nbsp;&nbsp;•&nbsp;&nbsp;Win Streak: <strong>${currentStreak}</strong>&nbsp;&nbsp;•&nbsp;&nbsp;Best: <strong>${bestStreak}</strong>`
+					: `Score: <strong>${playerScore} – ${aiScore}</strong>&nbsp;&nbsp;•&nbsp;&nbsp;Best Streak: <strong>${bestStreak}</strong>`;
+				ovBtn.innerHTML = `<span class="material-icons-round" style="font-size:17px">refresh</span>Play Again`;
+				overlay.classList.remove('hidden');
+			}, 400);
+		}
+
+		// ── Draw ─────────────────────────────────────────────────────
+		function draw() {
+			const W = canvas.width, H = canvas.height;
+
+			// Clear
+			ctx.clearRect(0, 0, W, H);
+
+			// Background
+			ctx.fillStyle = '#080D1A';
+			ctx.fillRect(0, 0, W, H);
+
+			// Flash overlay on collision
+			if (flashTimer > 0) {
+				ctx.fillStyle = 'rgba(255,255,255,0.08)';
+				ctx.fillRect(0, 0, W, H);
+			}
+
+			// Dashed center line
+			ctx.save();
+			ctx.setLineDash([10, 10]);
+			ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+			ctx.lineWidth   = 2;
+			ctx.beginPath();
+			ctx.moveTo(W / 2, 0);
+			ctx.lineTo(W / 2, H);
+			ctx.stroke();
+			ctx.setLineDash([]);
+			ctx.restore();
+
+			// Ball trail (last 5 positions, decreasing opacity)
+			for (let i = 0; i < trail.length; i++) {
+				const alpha = (i + 1) / trail.length * 0.18; // 0.036 to 0.18
+				const radius = BALL_R * ((i + 1) / trail.length); // shrinking
+				ctx.beginPath();
+				ctx.arc(trail[i].x, trail[i].y, radius, 0, Math.PI * 2);
+				ctx.fillStyle = `rgba(0,229,255,${alpha})`;
+				ctx.fill();
+			}
+
+			// Ball glow
+			const ballGrad = ctx.createRadialGradient(ball.x, ball.y, 0, ball.x, ball.y, BALL_R * 4);
+			ballGrad.addColorStop(0, 'rgba(0,229,255,0.25)');
+			ballGrad.addColorStop(1, 'rgba(0,229,255,0)');
+			ctx.beginPath();
+			ctx.arc(ball.x, ball.y, BALL_R * 4, 0, Math.PI * 2);
+			ctx.fillStyle = ballGrad;
+			ctx.fill();
+
+			// Ball
+			ctx.beginPath();
+			ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI * 2);
+			ctx.fillStyle = '#E8EDF5';
+			ctx.shadowColor = 'rgba(0,229,255,0.6)';
+			ctx.shadowBlur  = 10;
+			ctx.fill();
+			ctx.shadowBlur = 0;
+
+			// Player paddle (left) — blue glow
+			ctx.shadowColor = 'rgba(41,121,255,0.55)';
+			ctx.shadowBlur  = 12;
+			ctx.fillStyle   = '#5C9EFF';
+			roundRect(ctx, playerPaddle.x, playerPaddle.y, PADDLE_W, PADDLE_H, 4);
+			ctx.fill();
+
+			// AI paddle (right) — accent glow
+			ctx.shadowColor = 'rgba(0,229,255,0.55)';
+			ctx.shadowBlur  = 12;
+			ctx.fillStyle   = '#00E5FF';
+			roundRect(ctx, aiPaddle.x, aiPaddle.y, PADDLE_W, PADDLE_H, 4);
+			ctx.fill();
+			ctx.shadowBlur = 0;
+
+			// ── HUD ──────────────────────────────────────────────────
+			// Scores
+			ctx.font      = 'bold 40px Inter, sans-serif';
+			ctx.fillStyle = '#E8EDF5';
+			ctx.textAlign = 'right';
+			ctx.fillText(playerScore, W / 2 - 30, 60);
+			ctx.textAlign = 'left';
+			ctx.fillText(aiScore, W / 2 + 30, 60);
+
+			// Player / AI labels
+			ctx.font      = '700 12px Inter, sans-serif';
+			ctx.fillStyle = 'rgba(92,158,255,0.7)';
+			ctx.textAlign = 'right';
+			ctx.fillText('YOU', W / 2 - 30, 80);
+			ctx.fillStyle = 'rgba(0,229,255,0.7)';
+			ctx.textAlign = 'left';
+			ctx.fillText('AI', W / 2 + 30, 80);
+
+			// Best streak (bottom center)
+			ctx.font      = '600 12px Inter, sans-serif';
+			ctx.fillStyle = 'rgba(138,153,179,0.65)';
+			ctx.textAlign = 'center';
+			ctx.fillText(`Best streak: ${bestStreak}`, W / 2, H - 14);
+
+			// Pause indicator
+			if (state === 'paused') {
+				ctx.font      = '700 18px Inter, sans-serif';
+				ctx.fillStyle = 'rgba(232,237,245,0.6)';
+				ctx.textAlign = 'center';
+				ctx.fillText('PAUSED — Press Space to resume', W / 2, H / 2);
+			}
+
+			// Post-goal countdown hint
+			if (pauseAfterPoint > 0 && state === 'running') {
+				ctx.font      = '600 14px Inter, sans-serif';
+				ctx.fillStyle = 'rgba(138,153,179,0.5)';
+				ctx.textAlign = 'center';
+				ctx.fillText('Serving…', W / 2, H / 2 + 32);
+			}
+		}
+
+		// Rounded rect helper
+		function roundRect(ctx, x, y, w, h, r) {
+			ctx.beginPath();
+			ctx.moveTo(x + r, y);
+			ctx.lineTo(x + w - r, y);
+			ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+			ctx.lineTo(x + w, y + h - r);
+			ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+			ctx.lineTo(x + r, y + h);
+			ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+			ctx.lineTo(x, y + r);
+			ctx.quadraticCurveTo(x, y, x + r, y);
+			ctx.closePath();
+		}
+
+		// ── Start / pause / resume ───────────────────────────────────
+		function startRun() {
+			overlay.classList.add('hidden');
+			resize();
+			initGame();
+			state    = 'running';
+			startLoop();
+		}
+
+		function togglePause() {
+			if (state === 'running') {
+				state = 'paused';
+				cancelAnimationFrame(animId);
+				draw(); // show paused text
+			} else if (state === 'paused') {
+				state    = 'running';
+				lastTime = 0;
+				startLoop();
+			}
+		}
+
+		// ── Overlay button ───────────────────────────────────────────
+		ovBtn.addEventListener('click', () => {
+			if (state === 'idle' || state === 'dead') startRun();
+		});
+
+		// ── Keyboard controls ────────────────────────────────────────
+		document.addEventListener('keydown', e => {
+			keys[e.key] = true;
+
+			if (['ArrowUp', 'ArrowDown'].includes(e.key)) e.preventDefault();
+
+			if (e.key === ' ') {
+				e.preventDefault();
+				if (state === 'idle' || state === 'dead') {
+					startRun();
+				} else {
+					togglePause();
+				}
+			}
+		});
+
+		document.addEventListener('keyup', e => {
+			keys[e.key] = false;
+		});
+
+		// ── Touch — left half of screen moves player paddle ─────────
+		canvas.addEventListener('touchstart', e => {
+			e.preventDefault();
+			handleTouch(e);
+		}, { passive: false });
+
+		canvas.addEventListener('touchmove', e => {
+			e.preventDefault();
+			handleTouch(e);
+		}, { passive: false });
+
+		canvas.addEventListener('touchend', e => {
+			e.preventDefault();
+		}, { passive: false });
+
+		function handleTouch(e) {
+			const W = canvas.width;
+			for (const touch of e.touches) {
+				const rect = canvas.getBoundingClientRect();
+				const tx   = touch.clientX - rect.left;
+				const ty   = touch.clientY - rect.top;
+				// Left half only for paddle control
+				if (tx < W / 2) {
+					const scaleY = canvas.height / rect.height;
+					const canvasY = ty * scaleY;
+					// Center paddle on finger
+					playerPaddle.y = Math.max(0, Math.min(canvas.height - PADDLE_H, canvasY - PADDLE_H / 2));
+				}
+			}
+			// Start game on first touch if idle/dead
+			if (state === 'idle' || state === 'dead') {
+				startRun();
+			}
+		}
+
+		// ── Resize ───────────────────────────────────────────────────
+		let resizeTimer;
+		function handleResize() {
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(() => {
+				resize();
+				if (state === 'idle') {
+					draw();
+				} else if (state === 'running' || state === 'dead' || state === 'paused') {
+					cancelAnimationFrame(animId);
+					state = 'idle';
+					initGame();
+					ovEmoji.textContent = '🏓';
+					ovTitle.textContent = 'Pong';
+					ovSub.innerHTML = 'Move with <strong>↑ ↓</strong> or <strong>W S</strong>. First to 7 wins.<br>Press <strong>Space</strong> to pause during play.';
+					ovBtn.innerHTML = `<span class="material-icons-round" style="font-size:17px">play_arrow</span>Start Game`;
+					overlay.classList.remove('hidden');
+				}
+			}, 150);
+		}
+
+		window.addEventListener('resize', handleResize, { passive: true });
+		window.visualViewport?.addEventListener('resize', handleResize, { passive: true });
+
+		// ── Boot ─────────────────────────────────────────────────────
+		resize();
+		initGame();
+		draw();
+	</script>
+</body>
+
+</html>

@@ -267,3 +267,326 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 - Bird: yellow circle + orange beak + eye, drawn with canvas paths; wing flaps at ~8fps
 - Pipes: dark green body with lighter caps; parallax star layer at 0.5× pipe speed
 - Score drawn large and centred on canvas; death 600ms delay before overlay
+
+---
+
+## Tetris (`/tetris/`)
+
+### Gameplay
+- Classic single-player: clear horizontal lines by filling a 10×20 grid with falling tetrominoes
+- 7-bag randomiser ensures every piece appears once before any repeats
+- Score, level, lines cleared, and best score persist via `"tetrisBest"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| ← → | Move piece left / right |
+| ↓ | Soft drop (faster fall) |
+| ↑ | Rotate clockwise |
+| Z | Rotate counter-clockwise |
+| Space | Hard drop (instant) |
+| P | Pause / resume |
+
+### Mechanics
+- SRS rotation with wall kicks (up to 3 kick offsets tried per rotation)
+- Ghost piece shows where the active piece will land
+- Lock delay: 500ms after landing; resets on any successful move/rotate
+- Speed: starts at 800ms per row, decreases by 60ms per level (floor 100ms)
+- Lines → Level: 10 lines per level
+
+### Score model
+| Action | Points |
+|---|---|
+| 1 line | 100 × level |
+| 2 lines | 300 × level |
+| 3 lines | 500 × level |
+| 4 lines (Tetris) | 800 × level |
+| Soft drop (per row) | 1 |
+| Hard drop (per row) | 2 |
+
+### Visual feedback
+- Each tetromino has its own colour; ghost piece is a faded translucent outline
+- Line-clear: row flashes white then disappears with a translate-up animation
+- Level-up: sidebar level counter pulses with a brief scale animation
+
+---
+
+## Pong (`/pong/`)
+
+### Gameplay
+- Single-player vs AI canvas game; player controls the left paddle with the mouse/touch
+- AI controls the right paddle, tracking the ball at 75% ball speed
+- First to 7 points wins; best win streak persists via `"pongBest"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Mouse move (vertical) | Move left paddle |
+| Touch drag | Move left paddle |
+| Click / tap | Start or restart from overlay |
+
+### Physics
+- Ball speed starts at 5 px/frame, increases 5% on each paddle hit
+- Ball angle reflects off top/bottom walls; vertical component reversed
+- Paddle hit angle: deflection depends on hit position relative to paddle centre (±45°)
+- AI paddle capped at `ball.speed × 0.75` per frame to remain beatable
+
+### Visual feedback
+- Ball trail: last 5 positions drawn at decreasing opacity
+- Serve indicator: brief "3… 2… 1…" countdown drawn on canvas after a point
+- Win streak counter shown top-centre; pulses on new best
+- Score drawn canvas top-left (player) and top-right (AI)
+
+---
+
+## Connect Four (`/connect-four/`)
+
+### Gameplay
+- Two-player (local alternating turns) on a 7×6 grid
+- Drop a disc into any column; it falls to the lowest empty row
+- Win by connecting four discs of your colour in a row, column, or diagonal
+- Session scores only (no localStorage persistence)
+
+### Controls
+| Input | Action |
+|---|---|
+| Click column / hover arrow | Drop disc in that column |
+| Tap column | Drop disc (mobile) |
+| "New Game" button | Reset board and scores |
+
+### Visual feedback
+- Disc drop: CSS `translateY` fall animation from top of column (200ms ease-in)
+- Win highlight: winning four cells pulse with a bright border glow
+- Column hover: column header arrow indicator appears
+- Turn indicator sidebar shows whose turn it is with the current player colour
+
+---
+
+## Whack-a-Mole (`/whack-a-mole/`)
+
+### Gameplay
+- 30-second countdown; moles pop up in random holes in a 3×3 grid
+- Click or tap a mole before it retreats to score points
+- Golden moles (rare) are worth +3 points; normal moles +1
+- Best score persists via `"whackBest"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Click mole | Score a hit |
+| Tap mole | Score a hit (mobile) |
+| "Play" overlay button | Start game |
+
+### Mechanics
+- Mole visibility window: 800–1200ms (random); retreats if not clicked
+- At t=15s difficulty ramps: moles appear and disappear 30% faster
+- Floating score text (+1 / +3) animates upward from the hole on each hit
+- Miss clicks (clicking a hole without a mole) have no penalty
+
+### Visual feedback
+- Moles rise and fall via CSS `translateY` transition
+- Timer bar depletes across the top of the game area
+- Golden mole: yellow colour variant; regular mole: brown
+- Game-over overlay shows final score and best
+
+---
+
+## Simon (`/simon/`)
+
+### Gameplay
+- Single-player memory sequence game with four coloured quadrant buttons
+- Watch the pattern flash, then repeat it in the correct order
+- Pattern grows by one each successful round; wrong press ends the game
+- Best round persists via `"simonBest"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Click quadrant | Press that colour button |
+| Tap quadrant | Press that colour button (mobile) |
+
+### Mechanics
+- Colours: Blue (top-left), Red (top-right), Yellow (bottom-left), Green (bottom-right)
+- Audio tones via Web Audio API: Blue 330 Hz, Red 277 Hz, Yellow 220 Hz, Green 165 Hz
+- Speed tiers: rounds 1–4 → 600ms flash; 5–9 → 450ms; 10+ → 300ms
+- Tone plays for 350ms on flash; 150ms on player press
+
+### Visual feedback
+- Active quadrant brightens with a white overlay tint (0.35 opacity) and scale 1.05
+- Wrong press: all quadrants flash red then fade, game-over overlay appears
+- Centre hub shows round number during sequence and "YOUR TURN" during input phase
+- Sequence plays automatically with 200ms gaps between flashes
+
+---
+
+## Hangman (`/hangman/`)
+
+### Gameplay
+- Guess the hidden word one letter at a time; six wrong guesses trigger a full gallows
+- 60 bundled words across 5 categories: Animals, Countries, Sports, Foods, Tech
+- Win/loss streak persists via `"hangmanStreak"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Click letter button (A–Z) | Guess that letter |
+| Keyboard letter key | Guess that letter |
+| "New Game" button | Start fresh word |
+
+### Mechanics
+- Wrong guesses: after 6 the word is revealed and game-over state shown
+- Category shown above the letter blanks
+- Previously guessed letters are disabled (greyed out)
+- Win: remaining blanks fill in with a green-tint animation
+
+### Visual feedback
+- Inline SVG gallows: 6 body parts (head → torso → arms × 2 → legs × 2) drawn progressively using `stroke-dashoffset` reveal animation
+- Wrong letters shown in red below the gallows
+- Win streak counter updates in the sidebar; a pulse animation plays on new best
+- Letter buttons turn red (wrong) or green (correct) when guessed
+
+---
+
+## Asteroids (`/asteroids/`)
+
+### Gameplay
+- Retro vector-style arcade: navigate a ship through waves of asteroids
+- Shoot asteroids to split them; large → medium → small → destroyed
+- Best score persists via `"asteroidsBest"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| ← → (or A/D) | Rotate ship |
+| ↑ (or W) | Thrust forward |
+| Space | Fire bullet |
+| Mobile buttons | On-screen ◄ ▲ ► 🔥 buttons |
+
+### Physics & Mechanics
+- Ship: inertia-based movement; thrust applies acceleration; friction 0.99 per frame
+- Screen wrap: objects exit one edge and re-enter the opposite edge
+- Asteroids: 3 sizes (large r=45, medium r=25, small r=12); random polygon silhouettes
+- Bullet speed: 8 px/frame; lifetime 60 frames
+- New wave when all asteroids are cleared; next wave adds 1 extra large asteroid
+
+### Score model
+| Target | Points |
+|---|---|
+| Large asteroid | 20 |
+| Medium asteroid | 50 |
+| Small asteroid | 100 |
+
+### Visual feedback
+- All stroked paths — no fills; retro vector aesthetic
+- Thruster: particle trail emitted when thrusting (fades over 30 frames)
+- Explosion: 8 radial line-segment particles on asteroid destruction
+- Ship: briefly invincible with a blinking effect after death (3 lives total)
+- HUD: lives (small ship icons), score, best — drawn on canvas top corners
+
+---
+
+## Sudoku (`/sudoku/`)
+
+### Gameplay
+- Fill the 9×9 grid so every row, column, and 3×3 box contains digits 1–9
+- Three difficulty levels (Easy / Medium / Hard) with pre-authored puzzles
+- Timed challenge; best time per difficulty persists via localStorage keys
+  `"sudokuEasyBest"`, `"sudokuMedBest"`, `"sudokuHardBest"`
+
+### Controls
+| Input | Action |
+|---|---|
+| Click / tap cell | Select cell |
+| 1–9 keys | Enter digit (or add note in notes mode) |
+| Backspace / Delete | Clear selected cell |
+| Arrow keys | Move selection to adjacent cell |
+| On-screen number pad | 1–9 + Erase + Notes toggle |
+| Difficulty pills | Switch difficulty and load new puzzle |
+| "New Puzzle" button | Load fresh puzzle (resets timer) |
+| "Hint" button | Reveal one cell (+30s penalty) |
+
+### Mechanics
+- Notes mode: digit keys add/remove small candidate numbers in a 3×3 micro-grid inside the cell
+- Mistake highlighting: cells conflicting with the solution are outlined in red
+- Hint penalty: +30 seconds added to elapsed time; "+0:30" flashes on the timer for 1.5s
+- Timer starts on the first digit entry
+
+### Visual feedback
+- Selected cell: `--primary` border glow
+- Same-number highlight: cells with the same digit as the selected cell get a soft background tint
+- Peer highlight: row, column, and 3×3 box peers get a faint background
+- Given cells: slightly different background, bold font, non-editable
+- Win: cells fill sequentially left-to-right with a green shimmer wave over 800ms
+
+---
+
+## Dino Run (`/dino-run/`)
+
+### Gameplay
+- Endless runner: control a pixel-art dinosaur dodging cacti and pterodactyls
+- Game speed increases continuously; no win condition — survive as long as possible
+- Best score persists via `"dinoBest"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Space / ↑ | Jump (only on ground) |
+| ↓ / S | Duck (hold to stay ducked) |
+| Space / click canvas | Start or retry from overlay |
+| Tap canvas | Jump (mobile) |
+| Touch hold (bottom half) | Duck (mobile) |
+
+### Physics & Mechanics
+- Jump: upward velocity impulse; gravity pulls dino back to ground line; no double-jump
+- Duck: lowers hitbox to ~50% standing height while key held
+- Speed ramp: starts 6 px/frame, increases 0.001/frame, capped at 14 px/frame
+- Obstacle types: 3 cactus variants (small single, tall single, double cluster); pterodactyls at 3 heights (low / mid / high) spawn after score 200
+- Day/night cycle: canvas background alternates every 700 points over a 200-frame fade
+
+### Visual feedback
+- All drawn on canvas — geometric pixel-art inspired shapes, no image assets
+- Dino legs alternate between 2 positions every 8 frames; held still on jump/duck
+- Pterodactyl: 2 wing frames alternating every 12 frames
+- Ground: horizontal line with occasional small pebble rectangles
+- Score milestone: white flash every 100 points
+
+---
+
+## Bubble Shooter (`/bubble-shooter/`)
+
+### Gameplay
+- Aim and fire coloured bubbles from the bottom-centre to pop clusters of 3+ same-colour bubbles
+- Clear all bubbles from the board to advance levels; grid descends if too many shots are wasted
+- Best score persists via `"bubbleBest"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Mouse move | Aim shooter (angle tracks cursor) |
+| Click | Fire bubble |
+| Touch drag | Aim shooter |
+| Touch release | Fire bubble |
+
+### Mechanics
+- Hex offset grid (odd rows shifted right by half a bubble radius); 8 starting rows
+- 5 bubble colours: Blue, Cyan, Red, Yellow, Green
+- Aim guide: dotted line showing projected path including one wall reflection; clamped ±80° from vertical
+- Fired bubble snaps to nearest empty hex cell on contact
+- BFS cluster detection: pops clusters of 3+ same-colour connected bubbles
+- Floating bubble check: BFS from ceiling; any bubble no longer connected to top wall falls off for bonus points
+- Ceiling descent: every 10 shots without a pop, entire grid moves down one row
+
+### Score model
+| Action | Points |
+|---|---|
+| Popped bubble | 10 × combo multiplier |
+| Floating bubble dropped | 20 |
+| Combo: 6–9 bubbles | ×2 multiplier |
+| Combo: 10+ bubbles | ×3 multiplier |
+
+### Visual feedback
+- Bubbles: radial gradient fill + white specular highlight spot for a 3D glassy appearance
+- Pop animation: bubble expands slightly then bursts into 6–8 radial spark particles (fade over 300ms)
+- Floating-drop animation: freed bubbles fall off-screen with gravity acceleration
+- Danger line: red glow near the bottom; flashes brighter when any row reaches it
+- Level clear: full-canvas white flash (200ms) then level-complete overlay
