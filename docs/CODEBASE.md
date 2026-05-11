@@ -373,3 +373,69 @@ Key functions:
 - `drawBubble(x, y, colour, r)` — radial gradient fill + white specular highlight at top-left
 - `spawnParticles(x, y, colour)` — 6–8 radial spark particles for pop animation
 - `descentCheck()` — after 10 shots without a pop, shifts entire grid down one row; checks danger line
+
+
+---
+
+### `alien-invaders/index.html` — Alien Invaders
+Self-contained. Layout A (fullscreen canvas).
+
+State machine: `idle | running | paused | dead`.
+
+Key variables: `player {x,y,w,h,speed,cooldown,invulnerableUntil}`, `aliens[]`, `playerBullets[]`, `enemyBullets[]`, `particles[]`, `shieldCells[]`, `score`, `best`, `wave`, `lives`, `enemyFireTimer`, `alienDir`, `initialAlienCount`, `shieldsEnabled`, `waveTransitionUntil`.
+
+Persistent storage:
+- `BEST_KEY = "alienInvadersBest"`
+
+Key functions:
+- `resizeCanvas()` — sizes canvas to its container, applies DPR scaling, updates player dimensions/position, rebuilds stars, redraws idle/dead state
+- `buildStars()` — creates responsive starfield particles based on canvas area
+- `setupWave()` — resets bullets/particles, creates alien rows/columns, scales enemy fire timing, optionally builds shields
+- `buildShields()` — creates 3 or 4 destructible shield clusters with 3 HP cells
+- `startGame()` — resets score, wave, lives, player position/cooldown, grants initial invulnerability, starts wave 1
+- `startNextWave()` — increments wave, rebuilds alien formation, shows wave banner
+- `togglePause()` — switches between running and paused, or starts from idle/dead
+- `shoot()` — fires one player bullet if running and cooldown is ready
+- `loseLife()` — handles player hit, decrements lives, clears enemy bullets, triggers invulnerability flash or game over
+- `gameOver(reason)` — freezes game state, saves best score, shows game-over overlay with reason and final score
+- `clearWave()` — awards time-based wave clear bonus, updates best, queues next wave after delay
+- `update(dt)` — main simulation step: player movement, cooldowns, alien update, bullets, particles, enemy fire, reach-line checks
+- `updateAliens(dt, aliveAliens)` — moves formation, flips direction at edges, drops aliens downward, scales speed as aliens die
+- `updateBullets(dt)` — moves bullets, detects alien hits, shield hits, player hits, removes dead/offscreen bullets
+- `updateEnemyFire(dt, aliveAliens)` — chooses bottom-most aliens by column and fires random enemy bullets
+- `updateParticles(dt)` — moves and fades burst particles
+- `checkAlienReach(aliveAliens)` — ends game when any alien crosses the defense line
+- `hitShield(bullet, damage)` — applies damage to shield cells and destroys bullet on impact
+- `hitPlayer(bullet)` — AABB collision check against player cannon
+- `rectsOverlap(a,b)` — shared AABB helper for collisions
+- `burst(x,y,count,type)` — spawns particle bursts for alien kills, shots, shield hits, and player damage
+- `draw(dt)` — clears and redraws the entire canvas scene
+- `drawBackground(dt)` — draws vertical gradient, moving starfield, and subtle sci-fi grid
+- `drawDefenseLine()` — draws dashed red player danger line
+- `drawPlayer()` — draws cannon and handles invulnerability blinking
+- `drawAliens()` — draws glowing alien sprites with row-based colours and wobble animation
+- `drawBullets()` — draws primary-blue player shots and cyan/red enemy shots
+- `drawShields()` — draws shield cells with opacity/colour based on remaining HP
+- `drawParticles()` — draws fading circular particles
+- `roundedRect(x,y,w,h,r)` — shared canvas helper for rounded rectangles
+- `loop(now)` — RAF loop with capped delta time
+- `showOverlay(emoji,title,sub,buttonText)` — updates and displays start/pause/game-over overlay
+- `hideOverlay()` — hides overlay while game is running
+- `showWaveBanner(text)` — displays pulsing wave/status banner
+- `setStatus(text)` — updates top-left status pill
+- `updateBest()` — saves score to localStorage if it beats best
+- `updateStats()` — syncs score, best, wave, and lives UI
+- `setMove(direction, active)` — toggles left/right movement flags
+- `bindHold(button, direction)` — adds hold-to-move pointer controls for mobile buttons
+
+Event bindings:
+- `keydown` — Arrow Left/Right, A/D movement; Space fire/start/resume; P/Escape pause
+- `keyup` — stops keyboard movement
+- `canvas pointerdown/up/cancel` — mobile side-tap movement
+- `ovBtn` — start/resume/play again
+- `newBtn` — restart game
+- `pauseBtn` — pause/resume
+- `shieldBtn` — toggle shield blocks
+- `leftTouch/rightTouch` — hold-to-move mobile controls
+- `fireTouch` — fire/start/resume on mobile
+- `resize` — recompute canvas dimensions and redraw

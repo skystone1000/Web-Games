@@ -590,3 +590,57 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 - Floating-drop animation: freed bubbles fall off-screen with gravity acceleration
 - Danger line: red glow near the bottom; flashes brighter when any row reaches it
 - Level clear: full-canvas white flash (200ms) then level-complete overlay
+
+---
+
+## Alien Invaders (`/alien-invaders/`)
+
+### Gameplay
+- Control a laser cannon at the bottom of the screen and destroy descending alien waves
+- Clear every alien in the current wave to advance to a harder wave
+- Game ends if enemy fire hits the player with no lives remaining, aliens reach the defense line, or the player loses all lives
+- Best score persists via `"alienInvadersBest"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Arrow Left / Arrow Right | Move cannon left or right |
+| A / D | Move cannon left or right |
+| Space | Start game / fire / resume from idle or game over |
+| P / Escape | Pause or resume |
+| New button | Restart from wave 1 |
+| Pause button | Pause or resume |
+| Shields button | Toggle shield blocks before starting or after game over |
+| Tap left/right side | Move on mobile |
+| Tap fire button | Fire on mobile / start or resume when not running |
+
+### Mechanics
+- Fullscreen canvas action game using a `requestAnimationFrame` loop
+- State machine: `idle | running | paused | dead`
+- Alien formation moves horizontally as a group and drops downward when it hits screen edges
+- Alien speed increases by wave number and also rises as fewer aliens remain alive
+- Enemy shots are fired by the lowest alien in randomly selected columns
+- Player has 3 lives and receives a short invulnerability flash after taking damage
+- Optional shield blocks sit between the aliens and player; each block has 3 HP
+- Player and enemy bullets can damage shields
+- Wave transition delay prevents instant shooting while a new wave banner is showing
+- Canvas resizes responsively using device pixel ratio scaling
+- Mobile controls are shown on smaller screens while preserving no-scroll gameplay
+
+### Score model
+| Action | Points |
+|---|---|
+| Destroy alien | Alien row value + wave bonus |
+| Clear wave quickly | Time-based wave clear bonus |
+| Best score | Saved when current score exceeds `"alienInvadersBest"` |
+
+### Visual feedback
+- Player shots use primary blue glow
+- Enemy shots use cyan or red warning glow
+- Destroyed aliens burst into small particles
+- Shield impacts create cyan particle bursts
+- Player flashes during invulnerability after losing a life
+- Defense line is drawn above the cannon as a red dashed warning line
+- Wave banner pulses between rounds
+- Starfield and subtle moving grid create a sci-fi background
+- Start, pause, and game-over states use a fullscreen glass overlay
