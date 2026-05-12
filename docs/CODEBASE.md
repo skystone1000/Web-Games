@@ -439,3 +439,85 @@ Event bindings:
 - `leftTouch/rightTouch` — hold-to-move mobile controls
 - `fireTouch` — fire/start/resume on mobile
 - `resize` — recompute canvas dimensions and redraw
+
+
+---
+
+### `tower-defense/index.html` — Tower Defense
+Self-contained. Layout B (two-column panels: canvas/path left, tower shop sidebar right).
+
+State machine: `idle | running | paused | dead | won`.
+
+Key variables: `coins`, `wave`, `baseHealth`, `kills`, `best`, `enemies[]`, `towers[]`, `projectiles[]`, `particles[]`, `selectedType`, `selectedTower`, `hover`, `spawnLeft`, `spawnTimer`, `spawnInterval`, `waveActive`.
+
+Persistent storage:
+- `BEST_KEY = "towerDefenseBest"`
+
+Key objects:
+- `towerTypes.basic` — balanced damage/range/fire-rate tower
+- `towerTypes.slow` — slower firing tower that applies enemy slow
+- `towerTypes.splash` — explosive tower with area damage
+- `path[]` — fixed waypoint route used by enemies
+- `enemy` — `{x,y,seg,hp,maxHp,speed,reward,slowUntil,slowFactor,hitUntil,alive}`
+- `tower` — `{x,y,type,level,cooldown}`
+- `projectile` — `{x,y,target,speed,damage,color,type,splash,slow,slowDuration,born}`
+
+Key functions:
+- `resizeCanvas()` — resizes the canvas to the map panel and preserves a 900×560 logical drawing space
+- `resetGame()` — restores starting coins, base health, wave state, towers, enemies, projectiles, and UI
+- `startWave()` — starts the next wave, sets enemy spawn count/timing, and enters running state
+- `togglePause()` — pauses or resumes the wave using Space or the Pause button
+- `completeWave()` — awards wave-clear bonus coins, updates best wave, and shows the next-wave overlay
+- `gameOver()` — stops the game, records best wave, and shows the game-over overlay
+- `waveDef(n)` — returns wave-specific enemy count, health, speed, reward, and spawn interval
+- `spawnEnemy()` — creates an enemy at the first path waypoint
+- `update(dt, now)` — main simulation step for spawning, enemies, towers, projectiles, particles, and wave completion
+- `updateEnemies(dt, now)` — moves enemies along path waypoints and applies base damage on leaks
+- `updateTowers(dt, now)` — finds targets in range and fires projectiles based on tower cooldowns
+- `updateProjectiles(dt, now)` — moves projectiles toward targets and resolves impacts
+- `hitEnemy(enemy, projectile, now)` — applies direct or splash damage on projectile impact
+- `applyDamage(enemy, damage, projectile, now)` — damages enemies, applies slow effects, awards coins/kills on defeat
+- `damageBase()` — reduces base health, triggers warning glow, and checks game over
+- `findTarget(tower, range)` — chooses the furthest-progress enemy inside tower range
+- `getTowerStats(tower)` — computes range, damage, cooldown, and splash radius from tower type and level
+- `upgradeCost(tower)` — calculates next upgrade cost
+- `sellValue(tower)` — calculates partial refund value
+- `selectTowerType(type)` — selects a tower card from the shop
+- `placeTower(x,y)` — snaps placement to grid, validates tile, spends coins, and creates tower
+- `validBuildSpot(x,y)` — prevents building outside map, on the path, or too close to another tower
+- `distanceToPath(x,y)` — computes closest distance from a tile to the enemy path
+- `findTowerAt(x,y)` — selects existing tower under pointer
+- `upgradeSelected()` — upgrades the selected tower up to level 3
+- `sellSelected()` — removes selected tower and refunds coins
+- `burst(x,y,count,color)` — spawns impact/build/projectile particles
+- `draw(dt)` — full render pass for background, path, hover tile, towers, enemies, projectiles, particles, and base
+- `drawBackground()` — draws gradient map background and grid
+- `drawPath()` — draws the thick readable enemy path
+- `drawBuildHover()` — previews valid/invalid placement and selected tower range
+- `drawTowers()` — draws placed towers and selected range ring
+- `drawRange(x,y,range,color,alpha)` — shared tower range ring renderer
+- `drawEnemies()` — draws enemies, hit flashes, slow state, and HP bars
+- `drawProjectiles()` — draws glowing tower shots
+- `drawParticles()` — draws fading impact particles
+- `drawBase()` — draws the base at the path endpoint
+- `roundedRect(x,y,w,h,r)` — canvas helper for rounded rectangles
+- `updateStats()` — syncs Coins, Wave, Base Health, Kills, Best Wave, and wave preview UI
+- `updateBestWave()` — persists highest wave to localStorage
+- `updateButtons()` — updates Start/Pause button states and labels
+- `updateShop()` — enables/disables tower cards based on coins and selection
+- `updateSelectionBox()` — shows selected tower/type stats and upgrade/sell actions
+- `showOverlay(emoji,title,sub,buttonText)` — displays start/pause/win/game-over overlay
+- `hideOverlay()` — hides overlay while running
+- `loop(now)` — capped delta-time RAF loop
+
+Event bindings:
+- `towerShop click` — select Basic, Slow, or Splash tower
+- `canvas pointerdown` — place tower or select existing tower
+- `canvas pointermove` — update build preview hover tile
+- `upgradeBtn click` — upgrade selected tower
+- `sellBtn click` — sell selected tower
+- `startBtn click` — start next wave
+- `pauseBtn click` — pause/resume
+- `ovBtn click` — start/resume/play again from overlay
+- `keydown Space` — pause/resume or start wave
+- `resize` — recompute canvas scaling and redraw

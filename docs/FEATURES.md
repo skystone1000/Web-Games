@@ -644,3 +644,57 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 - Wave banner pulses between rounds
 - Starfield and subtle moving grid create a sci-fi background
 - Start, pause, and game-over states use a fullscreen glass overlay
+
+
+---
+
+## Tower Defense (`/tower-defense/`)
+
+### Gameplay
+- Build towers beside a winding path and stop enemies before they reach the base
+- Survive all 10 planned waves to win
+- Game ends when base health reaches zero
+- Best wave persists via `"towerDefenseBest"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Click / tap tower card | Select tower type |
+| Click / tap valid build tile | Place selected tower |
+| Click / tap existing tower | Select tower for upgrade or sell actions |
+| Start Wave button | Begin the next wave |
+| Upgrade button | Upgrade selected tower up to level 3 |
+| Sell button | Sell selected tower for partial coin refund |
+| Space | Pause / resume |
+
+### Mechanics
+- One fixed readable map with a winding enemy path
+- 10 waves with increasing enemy health, speed, and count
+- Three tower types: Basic, Slow, and Splash
+- Basic Tower: balanced single-target damage and reliable fire rate
+- Slow Tower: lower damage but applies a temporary slow effect to enemies
+- Splash Tower: slower projectile that damages clustered enemies around impact
+- Towers can only be placed on valid ground tiles away from the path
+- Path-blocking prevention stops towers from being placed on or too close to the enemy route
+- Defeated enemies reward coins
+- Selected towers show range rings and upgrade/sell information
+- Towers can be upgraded up to level 3, improving range, damage, and fire timing
+- Mobile layout collapses below 980px and allows vertical scrolling
+
+### Score model
+| Action | Reward |
+|---|---|
+| Defeat enemy | Coins based on wave difficulty |
+| Clear wave | Bonus coins |
+| Reach new wave | Updates best wave if higher than previous best |
+| Survive all waves | Victory state after wave 10 |
+
+### Visual feedback
+- Tower range rings appear when placing or selecting towers
+- Projectiles use primary blue/cyan styled glows
+- Enemy hit flashes use cyan feedback
+- Splash impacts create particle bursts
+- Base damage triggers a red screen-edge warning glow
+- Enemy health bars show remaining HP
+- Path uses a clear thick route with cyan dashed guide styling
+- Start, pause, victory, and game-over states use an in-map glass overlay
