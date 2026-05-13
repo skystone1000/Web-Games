@@ -521,3 +521,122 @@ Event bindings:
 - `ovBtn click` — start/resume/play again from overlay
 - `keydown Space` — pause/resume or start wave
 - `resize` — recompute canvas scaling and redraw
+
+
+
+---
+
+### `solitaire/index.html` — Solitaire
+Self-contained. Layout B (two-column panels: card table left, stats/rules sidebar right).
+
+State machine: `idle | running | paused | won`.
+
+Key variables: `stock[]`, `waste[]`, `foundations {S,H,D,C}`, `tableau[]`, `moves`, `elapsed`, `dealMode`, `preferredMode`, `selected`, `drag`, `best`.
+
+Persistent storage:
+- `BEST_KEY = "solitaireBest"`
+
+Key objects:
+- `card` — `{id,suit,rank,color,faceUp}`
+- `source` — `{zone,pile,index,suit}`
+- `target` — `{zone,pile,suit}`
+- `selected` — `{source,cards}`
+- `drag` — active pointer drag context for card or stack movement
+
+Key functions:
+- `createDeck()` — creates and shuffles a 52-card deck
+- `newDeal()` — resets the game, deals the Klondike tableau, starts timer, and applies selected draw mode
+- `startTimer()` — increments elapsed time while state is running
+- `togglePause()` — pauses or resumes the active deal
+- `drawFromStock()` — draws 1 or 3 cards, or recycles waste back into stock
+- `makeCard(card, source, top, z)` — creates a DOM card element
+- `render()` — redraws stock, waste, foundations, tableau, stats, buttons, and selection state
+- `getStackOffset()` — computes responsive tableau card overlap so stacks fit the available panel height
+- `findCardLocation(cardId)` — finds a card in tableau, waste, or foundations
+- `getStackFromSource(source)` — returns the movable card or tableau stack from a source
+- `sourceFromElement(el)` — reads card source data from DOM attributes
+- `targetFromElement(el)` — reads pile target data from DOM attributes
+- `canDragSource(source,cards)` — validates whether a card or stack can be moved
+- `isLegalMove(cards,source,target)` — checks Klondike rules for tableau and foundation drops
+- `possibleMovesFor(source,cards)` — lists all legal destinations for a selected card or stack
+- `moveCards(source,target)` — performs a legal move, reveals uncovered tableau cards, increments moves, and checks win state
+- `revealUncovered(source)` — flips the new top tableau card face-up when uncovered
+- `checkWin()` — detects all 52 cards in foundations, saves best result, and shows win overlay
+- `foundationCount()` — counts completed foundation cards
+- `handleCardTap(source,cards)` — auto-moves if one legal move exists, otherwise selects the card/stack
+- `handleSlotTap(target)` — attempts a tap-to-drop move for the selected card/stack
+- `clearSelection()` — clears selected stack and target highlights
+- `highlightLegalTargets(ctx)` — adds cyan glow to legal drop targets
+- `beginDrag(e,cardEl)` — starts pointer tracking for drag-and-drop
+- `startDragging()` — creates a floating drag layer with cloned cards
+- `moveDragLayer(clientX,clientY)` — positions dragged card stack under the pointer
+- `endDrag(e)` — resolves drop target or snaps cards back
+- `readBest()` — loads best time/move result from localStorage
+- `saveBest()` — stores best completed game result
+- `formatTime(seconds)` — formats timer as `m:ss`
+- `bestLabel()` — formats best result as time / moves
+- `updateStats()` — syncs Moves, Time, Foundations, Best, and Mode UI
+- `updateButtons()` — enables/disables pause and draw-mode controls based on state
+- `updateSelectionBox()` — updates selected card/stack helper text
+- `setStatus(text)` — updates the sidebar status pill
+- `showOverlay(emoji,title,sub,buttonText)` — displays start/pause/win overlay
+- `hideOverlay()` — hides overlay during active play
+
+Event bindings:
+- `table pointerdown` — starts drag, draws from stock, selects cards, or handles tap-to-drop targets
+- `table pointermove` — moves drag layer and starts drag after movement threshold
+- `table pointerup` — completes drag/drop or card tap
+- `table pointercancel` — cancels active drag
+- `ovBtn click` — new deal or resume
+- `newBtn click` — new shuffled deal
+- `pauseBtn click` — pause/resume
+- `modeBtn click` — toggle Draw 1 / Draw 3 before a deal
+- `keydown Space` — pause/resume or start a new deal
+- `resize` — recompute tableau spacing and redraw
+
+
+---
+
+### `sliding-puzzle/index.html` — Sliding Puzzle
+Self-contained. Layout C (centered fixed-aspect board with flanking info/control panels).
+
+State machine: `idle | running | won`.
+
+Key variables: `size`, `tiles[]`, `moves`, `elapsed`, `timerId`, `state`, `tileEls`, `emptyEl`.
+
+Persistent storage:
+- `BEST_PREFIX = "slidingPuzzleBest"`
+- Active keys: `"slidingPuzzleBest3"`, `"slidingPuzzleBest4"`, `"slidingPuzzleBest5"`
+
+Key functions:
+- `solvedTiles(n)` — returns the solved tile array for the selected size
+- `startPuzzle(newSize)` — resets moves/time, generates a solvable shuffle, starts the timer, and renders the board
+- `makeSolvableShuffle(n)` — creates a guaranteed-solvable shuffle by applying random legal moves from the solved state
+- `neighbours(index,n)` — returns legal neighbouring indexes for a board cell
+- `canSlide(index)` — checks whether a tile is adjacent to the empty cell
+- `slideIndex(index)` — swaps the selected tile with the empty cell, increments moves, renders, and checks win state
+- `slideByDirection(direction)` — handles Arrow/WASD movement by choosing the neighbouring tile that should slide into the empty space
+- `isSolved(arr)` — checks whether the board is in ascending solved order with the empty cell last
+- `winGame()` — stops timer, saves best result, triggers solved glow/confetti, and shows win overlay
+- `startTimer()` — starts a one-second timer while state is running
+- `stopTimer()` — clears the active timer interval
+- `render()` — positions all tile DOM elements, updates movable states, renders empty slot, mini preview, and stats
+- `renderMiniGrid()` — renders the solved-target preview grid for the active size
+- `readBest()` — loads the best moves/time result for the active size from localStorage
+- `saveBest()` — saves the current result if it beats the stored result by moves, then time
+- `bestText()` — formats the active size best result
+- `updateStats()` — syncs Moves, Time, Size, and Best UI
+- `formatTime(total)` — formats elapsed seconds as `m:ss`
+- `setStatus(text)` — updates the status pill
+- `showOverlay(emoji,title,sub,buttonText)` — displays the win/start overlay
+- `hideOverlay()` — hides the overlay during play
+- `celebrate()` — creates temporary confetti particles after solving
+- `init()` — creates the first solvable puzzle and starts the game
+
+Event bindings:
+- `shuffleBtn click` — generate a new puzzle with the current size
+- `ovBtn click` — shuffle again after win
+- `sizeButtons click` — switch between 3×3, 4×4, and 5×5
+- `tile click` — slide tile if adjacent to empty space
+- `keydown Arrow keys / WASD` — slide a neighbouring tile into the empty space
+- `resize` — recompute tile dimensions and rerender board
