@@ -640,3 +640,77 @@ Event bindings:
 - `tile click` — slide tile if adjacent to empty space
 - `keydown Arrow keys / WASD` — slide a neighbouring tile into the empty space
 - `resize` — recompute tile dimensions and rerender board
+
+
+```md id="r7lc59"
+---
+
+### `road-hopper/index.html` — Road Hopper
+Self-contained. Layout A (fullscreen canvas).
+
+State machine: `idle | running | paused | dead | won`.
+
+Key variables: `score`, `best`, `lives`, `timeLeft`, `goalsFilled`, `highestRow`, `player`, `lanes[]`, `objects[]`, `particles[]`, `shakeUntil`, `edgeWarnUntil`, `lastTime`.
+
+Persistent storage:
+- `BEST_KEY = "roadHopperBest"`
+
+Key objects:
+- `player` — `{col,row,x,y,targetX,targetY,moving,moveTime,moveDuration,safeUntil,onLog}`
+- `lane` — `{row,type,direction,speed,objects}`
+- `object` — moving vehicle/log hazard `{x,row,w,h,type,speed,direction,color}`
+- `goalSlots[]` — fixed top-row goal columns; completed slots are tracked as occupied
+- `particles[]` — short-lived burst particles for collisions, goals, and win feedback
+
+Key functions:
+- `resizeCanvas()` — sizes the fullscreen canvas to the available viewport and recalculates board scale
+- `resetGame()` — resets score, lives, timer, player, goals, lane objects, particles, and state
+- `startGame()` — starts a fresh run from idle/dead/won and hides the overlay
+- `togglePause()` — switches between running and paused states
+- `setupLanes()` — builds the fixed road, river, safe, start, and goal row definitions
+- `spawnLaneObjects()` — creates vehicles and logs for each moving lane
+- `resetPlayer()` — returns the hopper to the start row with a short safety window
+- `hop(dx,dy)` — performs one grid-step move if the player is not already moving
+- `completeGoal(slotIndex)` — fills a goal slot, awards points, checks win condition, and resets the player
+- `loseLife(reason)` — handles collision/water/offscreen failures, decrements lives, shakes screen, and either respawns or ends game
+- `winGame()` — awards remaining-time bonus, saves best score, and shows the victory overlay
+- `gameOver(reason)` — saves best score and shows the game-over overlay
+- `update(dt,now)` — main game simulation: timer, player interpolation, lane movement, collisions, log carrying, hazards, and particles
+- `updateObjects(dt)` — moves vehicles/logs smoothly across lanes and wraps them around screen edges
+- `updatePlayer(dt)` — interpolates player movement between grid cells and applies log carry when on river rows
+- `checkCurrentRow(now)` — resolves road collision, river log safety, offscreen log carry, goal entry, and safe rows
+- `checkVehicleCollision(obj)` — detects overlap between the player and road hazards
+- `findLogUnderPlayer()` — returns the active log supporting the player on river rows
+- `rowKind(row)` — identifies whether a grid row is road, river, safe, start, or goal
+- `saveBest()` — persists the best score to localStorage
+- `addScore(points)` — updates score and best display when needed
+- `burst(x,y,count,color)` — creates particle bursts for collision and goal feedback
+- `updateParticles(dt)` — moves and fades particles
+- `draw()` — full render pass for background, board rows, hazards, player, particles, UI overlays, and warning effects
+- `drawBackground()` — draws the ambient dark gradient and subtle grid
+- `drawRows()` — draws start, safe, road, river, and goal rows with distinct styling
+- `drawGoals()` — draws empty and completed goal slots
+- `drawLaneObjects()` — draws cars, trucks, and logs with smooth positions
+- `drawPlayer()` — draws the hopper with movement squash/stretch and invulnerability flash
+- `drawParticles()` — draws fading collision/goal particles
+- `drawWarningEffects()` — draws screen shake and red edge warning glow after damage or low time
+- `gridToPixel(col,row)` — converts logical grid coordinates to canvas pixel positions
+- `pixelToGrid(x,y)` — helper for mapping pointer/touch locations if needed
+- `clamp(value,min,max)` — shared bounds helper
+- `formatTime(seconds)` — formats remaining time for the stat UI
+- `updateStats()` — syncs Score, Best, Goals, Lives, and Time
+- `setStatus(text)` — updates the status pill
+- `showOverlay(emoji,title,sub,buttonText)` — displays start, pause, win, and game-over overlay
+- `hideOverlay()` — hides overlay while running
+- `loop(now)` — capped delta-time `requestAnimationFrame` game loop
+
+Event bindings:
+- `keydown` — Arrow keys / WASD hop movement; Space start/pause/resume
+- `touchstart` — records swipe start point
+- `touchend` — converts swipe into one grid-step hop
+- `upBtn/downBtn/leftBtn/rightBtn click` — mobile direction pad movement
+- `ovBtn click` — start, resume, or play again
+- `pauseBtn click` — pause/resume
+- `newBtn click` — restart run
+- `resize` — recompute canvas size and redraw
+```

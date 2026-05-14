@@ -802,3 +802,54 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 - Solved board glows with a cyan pulse
 - Final move triggers a short confetti celebration
 - Win state uses a glass overlay showing moves and time
+
+
+---
+
+## Road Hopper (`/road-hopper/`)
+
+### Gameplay
+- Hop from the bottom of the board to the safe goal spaces at the top
+- Fill all 5 goal slots before the timer runs out to win
+- Game ends if the hopper is hit by traffic, falls into water, rides offscreen on a log, runs out of lives, or runs out of time
+- Best score persists via `"roadHopperBest"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Arrow keys | Hop one tile in a direction |
+| WASD | Hop one tile in a direction |
+| Space | Start / pause / resume |
+| Swipe | Hop in swipe direction on mobile |
+| Mobile direction pad | Hop one tile in a direction |
+
+### Mechanics
+- Fullscreen canvas arcade game with no page scroll
+- Fixed 11×13 logical grid keeps player movement crisp and tile-based
+- Vehicles and logs render smoothly between grid cells
+- Road lanes contain cars and trucks moving in alternating directions
+- River lanes contain moving logs that carry the player horizontally
+- Missing a log in a river lane causes the player to fall into water
+- Staying on a log too long can carry the player offscreen
+- Hazard speed increases gradually over time and as goal slots are completed
+- Each completed goal slot becomes occupied and cannot be reused
+- Player gets a short safety window after respawning
+- Timer counts down for the whole run
+- Mobile supports swipe input and on-screen directional buttons
+
+### Score model
+| Action | Points |
+|---|---|
+| First forward hop into a higher row | 10 |
+| Reach a goal slot | 250 + goal progress bonus |
+| Win the game | Remaining time bonus |
+| Best score | Saved when current score exceeds `"roadHopperBest"` |
+
+### Visual feedback
+- Safe rows and goal slots use cyan/green glow styling
+- Danger road lanes flash subtly with red warning tint
+- Collisions trigger red particle bursts and screen shake
+- River logs bob slightly while moving
+- Completed goals show filled frog icons
+- Low time and collision states trigger a red screen-edge warning glow
+- Start, pause, win, and game-over states use a fullscreen glass overlay
