@@ -853,3 +853,59 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 - Completed goals show filled frog icons
 - Low time and collision states trigger a red screen-edge warning glow
 - Start, pause, win, and game-over states use a fullscreen glass overlay
+
+
+
+---
+
+## Reversi (`/reversi/`)
+
+### Gameplay
+- Play a polished local Reversi / Othello-style strategy board
+- Place discs to capture straight lines of opponent discs in any of 8 directions
+- Finish with more discs than the opponent when the board is full or neither player has a legal move
+- Play in Two Player mode or switch to Easy AI
+- Best winning margin persists via `"reversiBestMargin"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Click / tap highlighted cell | Place disc |
+| New Round button | Reset board |
+| Undo button | Revert the last move |
+| Two Player button | Switch to local two-player mode |
+| Easy AI button | Switch to solo mode against simple AI |
+| N key | Start a new round |
+| Ctrl / Cmd + Z | Undo last move |
+
+### Mechanics
+- Standard 8×8 Reversi board
+- Black starts with the standard four-disc centre opening
+- A move is legal only if it flips at least one opponent disc
+- Legal moves are highlighted with cyan glow
+- Captures are checked in all 8 directions from the placed disc
+- Captured discs flip to the current player colour
+- Players pass automatically when they have no legal move
+- Round ends when the board is full or neither player has a legal move
+- Corners receive subtle priority highlights
+- Easy AI prefers corner moves, then picks the move that flips the most discs
+- Undo restores the previous board snapshot
+- Mobile layout collapses below 900px and allows vertical scrolling
+
+### Score model
+| Action | Tracking |
+|---|---|
+| Disc placed | Board disc counts update |
+| Disc flipped | Black / White totals update |
+| Round won | Session round score updates |
+| Draw | Session draw count updates |
+| Best margin | Stored as `"reversiBestMargin"` |
+
+### Visual feedback
+- Valid cells glow with accent-dim cyan styling
+- Newly placed discs pop into the board
+- Flipped discs rotate with a short flip animation
+- Corners show subtle dashed priority markers
+- Current turn pill displays the active colour
+- Winning colour gets a final board glow
+- Round result appears in a glass modal

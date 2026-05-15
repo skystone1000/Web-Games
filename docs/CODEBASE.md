@@ -714,3 +714,60 @@ Event bindings:
 - `newBtn click` — restart run
 - `resize` — recompute canvas size and redraw
 ```
+
+
+
+---
+
+### `reversi/index.html` — Reversi
+Self-contained. Layout B (two-column panels: main board left, sidebar right).
+
+State machine: `running | ended`.
+
+Key variables: `board`, `currentPlayer`, `validMoves[]`, `history[]`, `lastPlaced`, `lastFlipped[]`, `mode`, `aiThinking`, `rounds`, `bestMargin`.
+
+Persistent storage:
+- `BEST_KEY = "reversiBestMargin"`
+
+Key constants:
+- `BLACK = 1`
+- `WHITE = 2`
+- `EMPTY = 0`
+- `SIZE = 8`
+- `directions` — 8 directional offsets used for capture scanning
+
+Key functions:
+- `newBoard()` — creates the standard opening board with four centre discs
+- `newRound()` — resets board, turn, history, animations, state, and modal
+- `cloneBoard(src)` — deep-copies the board array for undo snapshots
+- `snapshot()` — stores board, current player, animation markers, and state
+- `restore(snap)` — restores a previous snapshot for undo
+- `opponent(player)` — returns the opposite player colour
+- `playerName(player)` — formats player colour as `Black` or `White`
+- `inBounds(r,c)` — checks whether a board coordinate is valid
+- `getFlipsForMove(r,c,player,grid)` — scans 8 directions and returns all captured discs for a move
+- `getValidMoves(player,grid)` — returns all legal moves for a player
+- `placeDisc(r,c,isAiMove)` — validates and applies a move, flips captured discs, stores undo history, and advances turn
+- `refreshTurn(afterMove)` — recalculates valid moves, handles automatic passes, renders board, and triggers AI if needed
+- `makeAiMove()` — selects an Easy AI move using corner preference, then maximum flips
+- `isCorner(r,c)` — detects corner cells
+- `scorePosition(r,c)` — gives positional priority to corners and edges for AI sorting
+- `finishRound()` — ends the round, updates session wins/draws, saves best margin, and shows result modal
+- `countDiscs()` — counts black and white discs on the board
+- `render()` — redraws all 64 cells, discs, valid highlights, stats, turn pill, undo state, and best line
+- `cellLabel(r,c)` — creates accessible ARIA labels for board cells
+- `undo()` — restores the most recent board snapshot
+- `setMode(nextMode)` — switches between Two Player and Easy AI modes
+- `showEndModal(emoji,title,sub)` — displays the round result modal
+- `hideEndModal()` — hides the modal
+- `setStatus(text)` — updates sidebar status pill
+
+Event bindings:
+- `board click` — place disc on highlighted legal cell
+- `newBtn click` — start a new round
+- `modalBtn click` — start a new round from result modal
+- `undoBtn click` — undo last move
+- `twoPlayerBtn click` — enable local two-player mode
+- `aiBtn click` — enable Easy AI mode
+- `keydown N` — start a new round
+- `keydown Ctrl/Cmd + Z` — undo last move
