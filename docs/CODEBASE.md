@@ -771,3 +771,53 @@ Event bindings:
 - `aiBtn click` — enable Easy AI mode
 - `keydown N` — start a new round
 - `keydown Ctrl/Cmd + Z` — undo last move
+
+
+---
+
+### `maze-chase/index.html` — Maze Chase
+Self-contained. Layout A (fullscreen canvas).
+
+State machine: `idle | running | paused | caught | dead | won`.
+
+Key variables: `grid`, `player {x,y,dir,nextDir,speed,mouth}`, `enemies[] {name,x,y,spawnX,spawnY,dir,color,corner,delay}`, `score`, `best`, `lives`, `orbsLeft`, `frightenedTimer`, `modeClock`, `enemyCombo`, `trail[]`.
+
+Key functions:
+- `resize()` — high-DPI canvas setup; computes responsive tile size and centred board placement
+- `resetGame()` — rebuilds maze grid, clears spawn tile, resets player/enemies/lives/score, counts collectables
+- `loop(ts)` — delta-time RAF loop capped at 50ms; updates and draws only while running
+- `update(dt)` — advances timers, player movement, enemy AI, collisions, HUD, and mode state
+- `setDirection(name)` — queues keyboard/swipe direction input; starts from idle on first movement
+- `updatePlayer(dt)` — tile-centre turn handling, queued direction adoption, movement, orb collection, trail updates
+- `collectAt(x,y)` — handles small orb and power core scoring; triggers frightened mode and win detection
+- `currentMode()` — returns `Chase`, `Scatter`, or `Frightened` based on timers
+- `chooseEnemyDir(enemy,index)` — readable enemy AI; picks target-seeking direction in chase/scatter and evasive direction in frightened mode
+- `updateEnemies(dt)` — staggered enemy release, intersection decisions, speed changes, and tunnel wrapping
+- `checkCollisions()` — resolves dangerous catches versus vulnerable enemy captures
+- `loseLife()` — decrements lives, resets actors, shows caught overlay or ends the game
+- `drawMaze()` — renders wall blocks, pulsing orbs, glowing power cores, and tunnel shimmer
+- `drawPlayer()` — renders animated yellow player with mouth direction and motion trail
+- `drawEnemy(enemy)` — renders glowing ghost-style enemies with vulnerable colour swap
+- `showOverlay(...)` / `hideOverlay()` — shared fullscreen start/pause/end overlay controls
+
+
+---
+
+### `lights-out/index.html` — Lights Out
+Self-contained. Layout C (centered board with flanking info panels).
+
+State machine: implicit puzzle state using `solved` boolean.
+
+Key variables: `size`, `board[]`, `solution[]`, `playerPresses[]`, `moves`, `par`, `level`, `streak`, `best`, `hintIndex`.
+
+Key functions:
+- `generatePuzzle(advanceLevel)` — creates a solvable puzzle by applying random valid toggles from an all-off board; resets board state and HUD
+- `toggleInArray(arr,row,col)` — toggles a selected tile plus its orthogonal neighbours inside any board-like array
+- `renderBoard(pulsed)` — rebuilds the CSS grid, applies `on`, `hint`, and `pulse` classes, and attaches click handlers
+- `pressCell(position)` — handles player input, toggles board cells, tracks player presses, increments moves, clears hints, and checks for win
+- `showHint()` — computes `solution XOR playerPresses` and highlights one remaining useful tile
+- `handleWin()` — locks the board, updates streak/best score, checks Perfect status, and opens the win modal
+- `isSolved()` — returns true when all board entries are off
+- `countLit()` — counts currently lit cells for status feedback
+- `updateHud()` — syncs Moves, Par, Level, Best, and Streak counters
+- `updateSizeButtons()` — keeps grid-size controls visually in sync with the selected difficulty

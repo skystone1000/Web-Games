@@ -909,3 +909,96 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 - Current turn pill displays the active colour
 - Winning colour gets a final board glow
 - Round result appears in a glass modal
+
+
+---
+
+## Maze Chase (`/maze-chase/`)
+
+### Gameplay
+- Navigate a neon maze, collect every small orb, and avoid roaming enemy chasers
+- Grab power cores to temporarily make enemies vulnerable and score combo points by catching them
+- Clear every orb from the maze to win; lose a life when caught by a dangerous enemy
+- Best score persists via `"mazeChaseBest"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Arrow keys / WASD | Choose movement direction |
+| Space | Start / pause / resume |
+| Swipe | Choose movement direction on mobile |
+
+### Mechanics
+- Original 21 × 17 maze layout designed for this project rather than copying a commercial maze
+- Real-time tile-based movement with queued turns at tile centres
+- Horizontal tunnel row wraps the player and enemies from one side of the maze to the other
+- 3 enemy chasers with readable AI and staggered release timing
+- Enemy modes alternate between chase and scatter; power cores trigger frightened mode
+- Chase targeting varies per enemy: direct player target, ahead-of-player target, and mirrored target
+- Frightened enemies slow down, avoid the player, and can be caught for combo points
+- Player loses one life on contact with a dangerous enemy and resets to the starting tile
+
+### Score model
+| Action | Points |
+|---|---|
+| Small orb collected | 10 |
+| Power core collected | 50 |
+| First vulnerable enemy caught | 200 |
+| Consecutive vulnerable enemies caught | 400 / 800 / 1600 |
+| Maze clear life bonus | 250 × remaining lives |
+
+### Visual feedback
+- Canvas-based neon maze with glowing blue wall blocks and subtle grid ambience
+- Small orbs pulse softly; power cores glow cyan with a larger radial aura
+- Enemy chasers glow red/orange/pink when dangerous and cyan when vulnerable
+- Tunnel entrances shimmer with animated cyan dashed lines
+- Player has an animated mouth direction and a short yellow motion trail
+- Start, pause, caught, game-over, and win states use a fullscreen glass overlay
+
+
+
+---
+
+## Lights Out (`/lights-out/`)
+
+### Gameplay
+- Toggle glowing tiles until every light on the board is off
+- Each move toggles the selected tile plus its orthogonal neighbours
+- Choose between multiple grid sizes for different difficulty levels
+- Every puzzle is generated from valid toggles starting from an all-off board, so each puzzle is solvable
+- Best move count persists via `"lightsOutBest"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Click / tap light tile | Toggle that tile and its orthogonal neighbours |
+| New Puzzle button | Generate another solvable puzzle |
+| Hint button | Mark one useful next tile |
+| Grid Size buttons | Choose puzzle size / difficulty |
+
+### Mechanics
+- Turn-based single-player logic puzzle
+- Grid sizes: 3×3, 4×4, 5×5, and 6×6
+- Solvable puzzle generation: starts with an all-off board, applies a random set of valid toggles, and stores that toggle set as a known solution path
+- Move counter increments once per clicked/tapped tile
+- Par is based on the number of generated solution toggles for that puzzle
+- Hint system compares the original generated solution against the player’s pressed tiles and highlights one remaining useful tile
+- Level increases when generating the next puzzle
+- Streak increases after each solved puzzle and resets when an unfinished puzzle is skipped
+
+### Score model
+| Tracker | Behaviour |
+|---|---|
+| Moves | Number of player toggles in the current puzzle |
+| Par | Target move count for the generated puzzle |
+| Level | Current puzzle number for the selected grid size |
+| Best | Lowest solved move count saved in localStorage |
+| Streak | Consecutive solved puzzles without skipping an unfinished board |
+| Perfect badge | Awarded when solved in moves ≤ par |
+
+### Visual feedback
+- Lit cells glow cyan with a bright radial highlight
+- Toggled cells emit a quick pulse animation
+- Hint tile gets a yellow outline and soft glow
+- Solved board fades into a calmer dark state
+- Win modal displays final move count, par, streak, and Perfect badge when earned
