@@ -821,3 +821,30 @@ Key functions:
 - `countLit()` — counts currently lit cells for status feedback
 - `updateHud()` — syncs Moves, Par, Level, Best, and Streak counters
 - `updateSizeButtons()` — keeps grid-size controls visually in sync with the selected difficulty
+
+
+---
+
+### `checkers/index.html` — Checkers
+Self-contained. Layout B (two-column board + sidebar).
+
+State machine: implicit turn-based state using `gameOver`, `turn`, `selected`, and `chainLock`.
+
+Key variables: `board[8][8]`, `turn`, `selected`, `legalMoves[]`, `forcedCapture`, `chainLock`, `captures`, `moves`, `redWins`, `blueWins`, `bestMoves`, `lastKing`, `lastCapture`.
+
+Key functions:
+- `resetRound()` — builds a fresh 8×8 board, resets turn state, counters, highlights, and modal
+- `newBoard()` — places 12 blue and 12 red pieces on playable dark squares
+- `directionsFor(piece)` — returns allowed row directions for regular pieces or kings
+- `getSimpleMoves(row,col)` — returns legal non-capturing diagonal moves for one piece
+- `getCaptureMoves(row,col)` — returns legal jump captures for one piece
+- `playerHasCapture(player)` — checks whether a player has any available capture
+- `getLegalMovesForPiece(row,col)` — applies forced-capture and multi-jump rules for selected piece movement
+- `getAllLegalMoves(player)` — gathers all legal moves for game-over detection
+- `selectPiece(row,col)` — selects a current-player piece and highlights destinations
+- `performMove(move)` — moves pieces, removes captured pieces, handles king promotion, and starts/continues multi-jump chains
+- `endTurn()` — checks for winner, swaps active player, and refreshes UI state
+- `checkForWinner()` — detects no-pieces or no-legal-moves win conditions
+- `finishRound(winner,reason)` — updates wins, saves fastest win to `checkersBestMoves`, and shows win modal
+- `renderBoard()` — rebuilds the board DOM with piece, selected, legal, capture, must-capture, crown, and capture-burst classes
+- `updateHud()` — syncs pieces, turn, captures, moves, wins, fastest win, and forced-capture toggle state

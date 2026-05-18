@@ -1002,3 +1002,54 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 - Hint tile gets a yellow outline and soft glow
 - Solved board fades into a calmer dark state
 - Win modal displays final move count, par, streak, and Perfect badge when earned
+
+
+---
+
+## Checkers (`/checkers/`)
+
+### Gameplay
+- Local two-player checkers game with red and blue pieces
+- Capture all opponent pieces or block the opponent so they have no legal moves
+- Select a piece to highlight legal diagonal moves and captures
+- Reach the far row to promote a piece into a king
+- Fastest win persists via `"checkersBestMoves"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Click / tap piece | Select that piece |
+| Click / tap highlighted square | Move or capture |
+| New Round button | Reset the board |
+| Forced Captures toggle | Turn mandatory captures on/off |
+
+### Mechanics
+- Standard 8×8 checkerboard with playable dark squares
+- Red starts from the bottom and moves upward; blue starts from the top and moves downward
+- Regular pieces move diagonally forward by one square
+- Captures jump diagonally over one adjacent enemy piece into an empty square
+- Multi-jump chains are enforced after a capture when another capture is available from the landing square
+- Kings can move and capture diagonally in both directions
+- King promotion happens when a regular piece reaches the opponent’s back row
+- Optional forced-capture rules are enabled by default and can be toggled off
+- The game ends when one player has no pieces remaining or no legal moves
+
+### Score model
+| Tracker | Behaviour |
+|---|---|
+| Red Pieces | Remaining red pieces on the board |
+| Blue Pieces | Remaining blue pieces on the board |
+| Turn | Current player to move |
+| Captures | Total captures in the current round |
+| Moves | Total moves made in the current round |
+| Round Wins | Red and blue win counters for the current session |
+| Fastest Win | Lowest winning move count saved in localStorage |
+
+### Visual feedback
+- Selected pieces glow with the primary blue highlight
+- Legal move destinations glow cyan
+- Capture destinations glow yellow
+- Pieces that currently must capture receive a subtle yellow square outline
+- Captured pieces trigger a quick ring burst animation
+- Promoted kings show a crown icon and pulse when crowned
+- Win modal shows winner, move count, capture count, and win reason
