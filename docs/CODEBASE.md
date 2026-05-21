@@ -848,3 +848,32 @@ Key functions:
 - `finishRound(winner,reason)` — updates wins, saves fastest win to `checkersBestMoves`, and shows win modal
 - `renderBoard()` — rebuilds the board DOM with piece, selected, legal, capture, must-capture, crown, and capture-burst classes
 - `updateHud()` — syncs pieces, turn, captures, moves, wins, fastest win, and forced-capture toggle state
+
+
+---
+
+### `battleship/index.html` — Battleship
+Self-contained. Layout B (two grids/main panel + sidebar).
+
+State machine: `placing | player | enemy | victory | defeat`.
+
+Key variables: `playerBoard[]`, `enemyBoard[]`, `playerShips[]`, `enemyShips[]`, `phase`, `orientation`, `placingIndex`, `shots`, `hits`, `turns`, `bestTurns`, `aiTargets[]`, `previewCells[]`.
+
+Key functions:
+- `resetGame()` — creates fresh boards, resets setup/battle counters, randomises enemy fleet, and returns to placement phase
+- `makeBoard()` — creates a 10×10 cell array with ship and shot state
+- `cellsFor(row,col,shipSize,orient)` — returns board indexes occupied by a ship placement
+- `canPlace(board,row,col,shipSize,orient)` — validates bounds and overlap for placement
+- `placeShip(board,ships,def,row,col,orient)` — places a ship and stores its occupied cells
+- `randomPlaceFleet(board,ships)` — fills a board with the full fleet using random valid placements
+- `handlePlayerGridClick(position)` — places the current ship during setup
+- `handleEnemyGridClick(position)` — fires at the enemy board during the player turn and advances to enemy turn
+- `fireAt(board,ships,position)` — marks shot state, records hits, and marks ships sunk when all cells are hit
+- `enemyTurn()` — runs simple AI fire logic, then returns control to the player or ends the game
+- `chooseAiTarget()` — uses queued target cells after a hit, otherwise picks a random unshot cell
+- `addAiTargets(position)` — queues orthogonal neighbours after an AI hit
+- `finishGame(playerWon)` — saves best turn count on victory and opens the final modal
+- `renderBoard(el,board,ships,owner)` — renders player/enemy grids with ship, hit, miss, sunk, and placement-preview classes
+- `showPlacementPreview(position)` — previews current ship placement while hovering the player grid
+- `renderFleetList()` — displays the setup ship queue and current ship
+- `updateHud()` — syncs ship counts, shots, accuracy, and best turn count

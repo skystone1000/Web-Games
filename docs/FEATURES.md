@@ -1053,3 +1053,57 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 - Captured pieces trigger a quick ring burst animation
 - Promoted kings show a crown icon and pulse when crowned
 - Win modal shows winner, move count, capture count, and win reason
+
+
+---
+
+## Battleship (`/battleship/`)
+
+### Gameplay
+- Place your fleet on a 10×10 board, then fire at the enemy 10×10 grid
+- Sink the opponent fleet before the computer sinks yours
+- Setup phase supports manual placement, rotation, random fleet placement, and clearing the board
+- Battle phase alternates between one player shot and one computer shot
+- Best winning turn count persists via `"battleshipBestTurns"` in localStorage
+
+### Controls
+| Input | Action |
+|---|---|
+| Click / tap own grid during setup | Place current ship |
+| R key | Rotate current ship before placing |
+| Rotate button | Rotate current ship before placing |
+| Click / tap enemy grid | Fire at selected cell |
+| New Game button | Reset fleet and boards |
+| Randomize Fleet button | Auto-place the player fleet |
+| Clear Placement button | Clear player ships during setup |
+
+### Mechanics
+- Two 10×10 boards: player waters and enemy waters
+- Fleet includes Carrier 5, Battleship 4, Destroyer 3, Submarine 3, and Patrol Boat 2
+- Ships can be placed horizontally or vertically
+- Invalid placements are blocked when ships overlap or leave the board
+- Enemy fleet is randomly placed at the start of each game
+- Player ships are visible; enemy ships remain hidden until hit or sunk
+- Each side fires once per turn after setup is complete
+- Computer AI uses hunt/target behaviour: random shots until it hits, then nearby cells are prioritised
+- A ship is sunk when all of its cells are hit
+- The game ends when either fleet is completely sunk
+
+### Score model
+| Tracker | Behaviour |
+|---|---|
+| Your Ships | Player ships not yet sunk |
+| Enemy Ships | Enemy ships not yet sunk |
+| Shots | Number of player shots fired |
+| Accuracy | Player hits divided by shots fired |
+| Best Turns | Lowest winning turn count saved in localStorage |
+| Turns | One turn is counted for each player shot during battle |
+
+### Visual feedback
+- Placement preview glows cyan for valid positions and red for invalid positions
+- Player ships are shown as blue ship blocks on the player grid
+- Misses show a circular ripple marker
+- Hits flash with cyan/red impact styling
+- Sunk ships reveal their full outline on the enemy board
+- Active phase label changes between Place Fleet, Your Turn, Enemy Turn, Victory, and Defeat
+- Victory modal shows turn count, shot count, and accuracy
