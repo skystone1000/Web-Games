@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Whack-a-Mole — Games</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+
+    <!-- Bootstrap (layout utilities only — loaded BEFORE games.css so custom styles override) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Shared design system — always after Bootstrap -->
+    <link rel="stylesheet" href="/assets/css/games.css" />
+
+    <style>
+        /* ── No scroll, nav glass ── */
+        html,
+        body {
+            overflow: hidden;
+            height: 100%;
+        }
+
+        nav {
+            background: rgba(8, 13, 26, 0.92);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0 1px 0 var(--border);
+        }
+
+        /* ── Ambient background ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 70% 40%, rgba(41, 121, 255, 0.14) 0%, transparent 70%),
+                radial-gradient(ellipse 45% 45% at 15% 85%, rgba(0, 229, 255, 0.08) 0%, transparent 60%);
+        }
+
+        /* ── Viewport layout ── */
+        .game-viewport {
+            flex-direction: column;
+            padding-top: 66px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .inner {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(0.75rem, 2vh, 1.5rem);
+            padding: 1rem;
+            width: 100%;
+            min-height: 0;
+            position: relative;
+        }
+
+        /* ── Stat row ── */
+        .stat-row {
+            display: flex;
+            gap: clamp(0.6rem, 2vw, 1.2rem);
+            align-items: stretch;
+        }
+
+        .stat-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: clamp(0.55rem, 1.5vw, 0.9rem) clamp(0.75rem, 2.5vw, 1.4rem);
+            text-align: center;
+            min-width: clamp(72px, 14vw, 110px);
+            transition: transform var(--ease), border-color var(--ease), box-shadow var(--ease);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(41, 121, 255, 0.3);
+            box-shadow: var(--glow);
+        }
+
+        .stat-value {
+            font-size: clamp(1.3rem, 3.5vw, 1.8rem);
+            font-weight: 800;
+            color: var(--primary-light);
+            line-height: 1;
+        }
+
+        .stat-value.accent {
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-top: 4px;
+        }
+
+        /* ── Timer bar ── */
+        .timer-bar-wrap {
+            width: min(400px, 90vw);
+            height: 6px;
+            background: var(--bg2);
+            border-radius: 99px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        #timer-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 99px;
+            transition: width 1s linear;
+        }
+
+        #timer-bar.depleting {
+            transition: width 30s linear;
+        }
+
+        #timer-bar.urgent {
+            background: linear-gradient(90deg, #ff4d4d, #ff8c00);
+        }
+
+        /* ── Hole grid ── */
+        .holes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(0.7rem, 2.5vw, 1.25rem);
+        }
+
+        /* ── Hole & mole ── */
+        .hole {
+            width: clamp(80px, 16vw, 120px);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: var(--bg2);
+            border: 2px solid var(--border);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: border-color var(--ease), box-shadow var(--ease);
+        }
+
+        .hole:hover {
+            border-color: rgba(41, 121, 255, 0.35);
+            box-shadow: var(--glow);
+        }
+
+        .hole.active {
+            border-color: rgba(0, 229, 255, 0.45);
+        }
+
+        .hole.golden-active {
+            border-color: rgba(255, 200, 0, 0.7);
+            box-shadow: 0 0 18px rgba(255, 200, 0, 0.25);
+        }
+
+        .mole {
+            position: absolute;
+            bottom: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            transition: bottom 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+            user-select: none;
+            pointer-events: none;
+            line-height: 1;
+        }
+
+        .hole.active .mole {
+            bottom: 5%;
+        }
+
+        /* ── Floating score text ── */
+        @keyframes floatUp {
+            from {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-36px);
+            }
+        }
+
+        /* ── Overlay ── */
+        #overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            gap: 0.85rem;
+            padding: 18px;
+            background: rgba(8, 13, 26, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 0;
+        }
+
+        #overlay.hidden {
+            display: none !important;
+        }
+
+        #ov-emoji {
+            font-size: clamp(2.4rem, 8vw, 3.4rem);
+            line-height: 1;
+        }
+
+        #ov-title {
+            font-size: clamp(1.2rem, 4vw, 1.6rem);
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text);
+        }
+
+        #ov-sub {
+            font-size: 0.85rem;
+            color: var(--text2);
+            text-align: center;
+            max-width: min(420px, 90vw);
+            line-height: 1.55;
+        }
+
+        #ov-stats {
+            display: flex;
+            gap: 0.85rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .ov-stat {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.7rem 1.2rem;
+            text-align: center;
+            min-width: 90px;
+        }
+
+        .ov-stat-val {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-light);
+            line-height: 1;
+        }
+
+        .ov-stat-val.gold {
+            color: #ffd700;
+        }
+
+        .ov-stat-lbl {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-top: 4px;
+        }
+
+        /* ── Back link ── */
+        .back-link {
+            position: absolute;
+            bottom: 1.2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 480px) {
+            .hole {
+                width: clamp(72px, 26vw, 92px);
+            }
+
+            .stat-card {
+                min-width: 62px;
+                padding: 0.45rem 0.55rem;
+            }
+
+            .stat-value {
+                font-size: 1.15rem;
+            }
+
+            .stat-label {
+                font-size: 0.6rem;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .inner {
+                gap: 0.5rem;
+            }
+
+            .holes-grid {
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header-placeholder"></div>
+
+    <div class="game-viewport d-flex">
+        <div class="inner">
+
+            <!-- Stat row -->
+            <div class="stat-row">
+                <div class="stat-card">
+                    <div class="stat-value" id="score-display">0</div>
+                    <div class="stat-label">Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value accent" id="best-display">0</div>
+                    <div class="stat-label">Best</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="time-display">30</div>
+                    <div class="stat-label">Seconds</div>
+                </div>
+            </div>
+
+            <!-- Timer bar -->
+            <div class="timer-bar-wrap">
+                <div id="timer-bar"></div>
+            </div>
+
+            <!-- 3×3 mole grid -->
+            <div class="holes-grid" id="holes-grid">
+                <div class="hole" id="hole-0"><div class="mole" id="mole-0">🐭</div></div>
+                <div class="hole" id="hole-1"><div class="mole" id="mole-1">🐭</div></div>
+                <div class="hole" id="hole-2"><div class="mole" id="mole-2">🐭</div></div>
+                <div class="hole" id="hole-3"><div class="mole" id="mole-3">🐭</div></div>
+                <div class="hole" id="hole-4"><div class="mole" id="mole-4">🐭</div></div>
+                <div class="hole" id="hole-5"><div class="mole" id="mole-5">🐭</div></div>
+                <div class="hole" id="hole-6"><div class="mole" id="mole-6">🐭</div></div>
+                <div class="hole" id="hole-7"><div class="mole" id="mole-7">🐭</div></div>
+                <div class="hole" id="hole-8"><div class="mole" id="mole-8">🐭</div></div>
+            </div>
+
+            <!-- Start / result overlay -->
+            <div id="overlay" class="d-flex flex-column align-items-center justify-content-center">
+                <div id="ov-emoji">🔨</div>
+                <div id="ov-title">Whack-a-Mole</div>
+                <div id="ov-sub">Moles pop up from 9 holes. Click them before they duck back down. How many can you whack in 30 seconds?</div>
+                <div id="ov-stats" style="display:none!important"></div>
+                <button class="btn btn-p d-inline-flex align-items-center gap-2" id="ov-btn">
+                    <span class="material-icons-round" style="font-size:17px">play_arrow</span>Start Game
+                </button>
+            </div>
+
+            <!-- Back to all games -->
+            <a href="/" class="btn btn-o d-inline-flex align-items-center gap-2 back-link">
+                <span class="material-icons-round" style="font-size:17px">arrow_back</span>All Games
+            </a>
+
+        </div>
+    </div>
+
+    <script src="/assets/js/games.js"></script>
+    <script>
+        // ── State ──────────────────────────────────────────────────
+        let score = 0;
+        let timeLeft = 30;
+        let gameActive = false;
+        let best = Number(localStorage.getItem('whackBest') || 0);
+        let moleTimers = Array(9).fill(null);
+        let countdownInterval = null;
+        let schedulerTimeout = null;
+        let totalAppearances = 0;
+        let totalHits = 0;
+
+        // ── DOM refs ───────────────────────────────────────────────
+        const overlay = document.getElementById('overlay');
+        const ovEmoji = document.getElementById('ov-emoji');
+        const ovTitle = document.getElementById('ov-title');
+        const ovSub = document.getElementById('ov-sub');
+        const ovStats = document.getElementById('ov-stats');
+        const ovBtn = document.getElementById('ov-btn');
+        const scoreDisplay = document.getElementById('score-display');
+        const bestDisplay = document.getElementById('best-display');
+        const timeDisplay = document.getElementById('time-display');
+        const timerBar = document.getElementById('timer-bar');
+
+        // ── Helpers ────────────────────────────────────────────────
+        function getVisibilityDuration(isGolden) {
+            // Golden moles: always 500ms
+            if (isGolden) return 500;
+            // Final 10s: 500–800ms; first 20s: 800–1100ms
+            if (timeLeft <= 10) return 500 + Math.random() * 300;
+            return 800 + Math.random() * 300;
+        }
+
+        function updateScoreDisplay() {
+            scoreDisplay.textContent = score;
+        }
+
+        function updateBestDisplay() {
+            bestDisplay.textContent = best;
+        }
+
+        // ── Mole logic ─────────────────────────────────────────────
+        function showMole(holeIdx, isGolden) {
+            const hole = document.getElementById('hole-' + holeIdx);
+            const mole = document.getElementById('mole-' + holeIdx);
+            if (hole.dataset.active === 'true') return;
+
+            hole.dataset.active = 'true';
+            hole.dataset.golden = isGolden ? 'true' : 'false';
+
+            if (isGolden) {
+                mole.textContent = '🌟';
+                mole.style.filter = 'hue-rotate(0deg) brightness(1.5)';
+                hole.classList.add('active', 'golden-active');
+            } else {
+                mole.textContent = '🐭';
+                mole.style.filter = '';
+                hole.classList.add('active');
+                hole.classList.remove('golden-active');
+            }
+
+            totalAppearances++;
+
+            const visibility = getVisibilityDuration(isGolden);
+            moleTimers[holeIdx] = setTimeout(() => hideMole(holeIdx, false), visibility);
+        }
+
+        function hideMole(holeIdx, wasHit) {
+            const hole = document.getElementById('hole-' + holeIdx);
+            const mole = document.getElementById('mole-' + holeIdx);
+            hole.classList.remove('active', 'golden-active');
+            hole.dataset.active = 'false';
+            clearTimeout(moleTimers[holeIdx]);
+            moleTimers[holeIdx] = null;
+
+            if (wasHit) {
+                mole.textContent = '💫';
+                mole.style.filter = '';
+                setTimeout(() => {
+                    mole.textContent = '🐭';
+                }, 220);
+            } else {
+                mole.style.filter = '';
+                setTimeout(() => {
+                    mole.textContent = '🐭';
+                }, 0);
+            }
+        }
+
+        // ── Floating score text ────────────────────────────────────
+        function showFloatingText(hole, text) {
+            const el = document.createElement('div');
+            el.textContent = text;
+            el.style.cssText = `
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translateX(-50%);
+                color: var(--accent);
+                font-weight: 800;
+                font-size: 1.2rem;
+                pointer-events: none;
+                animation: floatUp 0.6s ease forwards;
+                z-index: 10;
+                white-space: nowrap;
+            `;
+            hole.appendChild(el);
+            setTimeout(() => el.remove(), 620);
+        }
+
+        // ── Click handler per hole ─────────────────────────────────
+        function setupHoleListeners() {
+            for (let i = 0; i < 9; i++) {
+                const hole = document.getElementById('hole-' + i);
+                hole.addEventListener('click', () => {
+                    if (!gameActive || hole.dataset.active !== 'true') return;
+                    clearTimeout(moleTimers[i]);
+                    moleTimers[i] = null;
+                    const isGolden = hole.dataset.golden === 'true';
+                    const pts = isGolden ? 3 : 1;
+                    score += pts;
+                    totalHits++;
+                    updateScoreDisplay();
+                    showFloatingText(hole, '+' + pts);
+                    hideMole(i, true);
+                });
+                // Touch support: prevent long-press lag
+                hole.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+            }
+        }
+
+        // ── Mole scheduler ────────────────────────────────────────
+        function scheduleMole() {
+            if (!gameActive) return;
+            const maxSimult = timeLeft > 15 ? 2 : 3;
+            const active = Array.from({ length: 9 }, (_, i) =>
+                document.getElementById('hole-' + i)
+            ).filter(h => h.dataset.active === 'true').length;
+
+            if (active < maxSimult) {
+                const available = Array.from({ length: 9 }, (_, i) => i)
+                    .filter(i => document.getElementById('hole-' + i).dataset.active !== 'true');
+                if (available.length > 0) {
+                    const idx = available[Math.floor(Math.random() * available.length)];
+                    const golden = Math.random() < 0.15;
+                    showMole(idx, golden);
+                }
+            }
+
+            schedulerTimeout = setTimeout(scheduleMole, 400 + Math.random() * 400);
+        }
+
+        // ── Timer countdown ────────────────────────────────────────
+        function startCountdown() {
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                timeDisplay.textContent = timeLeft;
+
+                // Urgent color on timer bar in final 10s
+                if (timeLeft <= 10) {
+                    timerBar.classList.add('urgent');
+                }
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // ── Start game ────────────────────────────────────────────
+        function startGame() {
+            // Reset state
+            score = 0;
+            timeLeft = 30;
+            gameActive = true;
+            totalAppearances = 0;
+            totalHits = 0;
+
+            // Reset all holes
+            for (let i = 0; i < 9; i++) {
+                const hole = document.getElementById('hole-' + i);
+                hole.dataset.active = 'false';
+                hole.classList.remove('active', 'golden-active');
+                clearTimeout(moleTimers[i]);
+                moleTimers[i] = null;
+                const mole = document.getElementById('mole-' + i);
+                mole.textContent = '🐭';
+                mole.style.filter = '';
+            }
+
+            // Update displays
+            updateScoreDisplay();
+            updateBestDisplay();
+            timeDisplay.textContent = timeLeft;
+
+            // Reset timer bar — start full, then deplete
+            timerBar.classList.remove('depleting', 'urgent');
+            timerBar.style.transition = 'none';
+            timerBar.style.width = '100%';
+
+            // Hide overlay
+            overlay.classList.add('hidden');
+
+            // Start timer bar depletion on next frame
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    timerBar.classList.add('depleting');
+                    timerBar.style.width = '0%';
+                });
+            });
+
+            // Start countdown and mole scheduler
+            startCountdown();
+            scheduleMole();
+        }
+
+        // ── End game ──────────────────────────────────────────────
+        function endGame() {
+            gameActive = false;
+
+            // Stop timers
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+            clearTimeout(schedulerTimeout);
+            schedulerTimeout = null;
+
+            // Hide all active moles
+            for (let i = 0; i < 9; i++) {
+                if (document.getElementById('hole-' + i).dataset.active === 'true') {
+                    hideMole(i, false);
+                }
+            }
+
+            // Update best
+            if (score > best) {
+                best = score;
+                localStorage.setItem('whackBest', best);
+            }
+            updateBestDisplay();
+
+            // Calculate accuracy
+            const accuracy = totalAppearances > 0
+                ? Math.round((totalHits / totalAppearances) * 100)
+                : 0;
+
+            // Show result overlay
+            ovEmoji.textContent = score >= 20 ? '🏆' : score >= 10 ? '🎯' : '🔨';
+            ovTitle.textContent = score >= 20 ? 'Excellent Aim!' : score >= 10 ? 'Nice Work!' : 'Game Over';
+            ovSub.textContent = `You whacked ${score} mole${score !== 1 ? 's' : ''} in 30 seconds.`;
+
+            // Build result stats
+            ovStats.style.removeProperty('display');
+            ovStats.innerHTML = `
+                <div class="ov-stat">
+                    <div class="ov-stat-val">${score}</div>
+                    <div class="ov-stat-lbl">Score</div>
+                </div>
+                <div class="ov-stat">
+                    <div class="ov-stat-val gold">${best}</div>
+                    <div class="ov-stat-lbl">Best</div>
+                </div>
+                <div class="ov-stat">
+                    <div class="ov-stat-val">${accuracy}%</div>
+                    <div class="ov-stat-lbl">Accuracy</div>
+                </div>
+            `;
+
+            // Update button
+            const icon = ovBtn.querySelector('.material-icons-round');
+            icon.textContent = 'replay';
+            ovBtn.childNodes[ovBtn.childNodes.length - 1].textContent = 'Play Again';
+
+            overlay.classList.remove('hidden');
+        }
+
+        // ── Overlay button handler ─────────────────────────────────
+        ovBtn.addEventListener('click', () => {
+            startGame();
+        });
+
+        // ── Init ───────────────────────────────────────────────────
+        setupHoleListeners();
+        updateBestDisplay();
+
+        // Ensure all holes are initialized
+        for (let i = 0; i < 9; i++) {
+            const hole = document.getElementById('hole-' + i);
+            hole.dataset.active = 'false';
+            hole.dataset.golden = 'false';
+        }
+    </script>
+</body>
+
+</html>

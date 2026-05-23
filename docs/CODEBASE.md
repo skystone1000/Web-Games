@@ -111,7 +111,7 @@ CSS overrides in game's `<style>`:
 4. Wrap game UI in `<div class="game-viewport">` (override flex direction as needed)
 5. Override `nav` in `<style>` to force glass background
 6. Add `body { overflow: hidden }` in `<style>`
-7. Load `../assets/js/games.js` before game script
+7. Load `/assets/js/games.js` before game script
 8. Add `<article class="game-card">` to `index.html` game grid
 
 ---

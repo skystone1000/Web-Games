@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connect Four — Games</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+
+    <!-- Bootstrap (layout utilities only — loaded BEFORE games.css so custom styles override) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Shared design system — always after Bootstrap -->
+    <link rel="stylesheet" href="/assets/css/games.css" />
+
+    <style>
+        /* ── No page scroll ── */
+        html, body { overflow: hidden; height: 100%; }
+
+        /* ── Force nav glass ── */
+        nav {
+            background: rgba(8, 13, 26, 0.92);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0 1px 0 var(--border);
+        }
+
+        /* ── Ambient background ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 70% 40%, rgba(41, 121, 255, 0.14) 0%, transparent 70%),
+                radial-gradient(ellipse 45% 45% at 15% 85%, rgba(0, 229, 255, 0.08) 0%, transparent 60%);
+        }
+
+        /* ── Layout ── */
+        .game-viewport {
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            padding-top: 66px;
+        }
+
+        .game-area {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+            display: grid;
+            align-items: stretch;
+            justify-items: center;
+            padding: 2rem 6vw;
+            min-height: 0;
+        }
+
+        .game-shell {
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        /* ── Left panel (board area) ── */
+        .board-panel {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* ── Column header row (ghost disc area) ── */
+        .col-headers {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            width: 100%;
+            gap: 6px;
+            position: relative;
+            height: clamp(36px, 7vw, 52px);
+        }
+
+        .col-header-btn {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: border-color var(--ease), background var(--ease);
+            position: relative;
+        }
+
+        .col-header-btn:hover {
+            border-color: rgba(41, 121, 255, 0.4);
+            background: rgba(41, 121, 255, 0.08);
+        }
+
+        .col-header-btn.p2-hover:hover {
+            border-color: rgba(0, 229, 255, 0.4);
+            background: rgba(0, 229, 255, 0.08);
+        }
+
+        .col-header-btn.full {
+            cursor: default;
+            pointer-events: none;
+            opacity: 0.25;
+        }
+
+        /* Ghost disc inside header button */
+        .ghost-disc {
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.15s;
+            pointer-events: none;
+        }
+
+        .col-header-btn:hover .ghost-disc {
+            opacity: 0.55;
+        }
+
+        .ghost-disc.p1 { background: var(--primary); box-shadow: 0 0 12px rgba(41, 121, 255, 0.5); }
+        .ghost-disc.p2 { background: var(--accent); box-shadow: 0 0 12px rgba(0, 229, 255, 0.5); }
+
+        /* ── Game board grid ── */
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            width: 100%;
+            background: linear-gradient(135deg, rgba(41, 121, 255, 0.07), rgba(0, 229, 255, 0.04));
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 10px;
+        }
+
+        /* ── Individual cells ── */
+        .cell {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: var(--bg2);
+            border: 2px solid var(--border);
+            transition: background 0.15s, border-color 0.15s, box-shadow 0.3s;
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Disc fill inside cell */
+        .disc {
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            transform: translateY(-400%);
+            transition: transform 0.25s ease-in;
+        }
+
+        .disc.landed {
+            transform: translateY(0);
+        }
+
+        .disc.p1 {
+            background: radial-gradient(circle at 35% 35%, #5C9EFF, var(--primary));
+            box-shadow: 0 0 14px rgba(41, 121, 255, 0.45);
+        }
+
+        .disc.p2 {
+            background: radial-gradient(circle at 35% 35%, #40f0ff, var(--accent));
+            box-shadow: 0 0 14px rgba(0, 229, 255, 0.45);
+        }
+
+        .cell.dimmed {
+            opacity: 0.35;
+        }
+
+        /* Win pulse animation */
+        @keyframes pulse-win-p1 {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(41, 121, 255, 0.0), inset 0 0 0 2px var(--primary); }
+            50%       { box-shadow: 0 0 24px 6px rgba(41, 121, 255, 0.55), inset 0 0 0 2px #5C9EFF; }
+        }
+
+        @keyframes pulse-win-p2 {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.0), inset 0 0 0 2px var(--accent); }
+            50%       { box-shadow: 0 0 24px 6px rgba(0, 229, 255, 0.55), inset 0 0 0 2px #40f0ff; }
+        }
+
+        .cell.win-p1 {
+            border-color: var(--primary) !important;
+            animation: pulse-win-p1 1s ease-in-out infinite;
+        }
+
+        .cell.win-p2 {
+            border-color: var(--accent) !important;
+            animation: pulse-win-p2 1s ease-in-out infinite;
+        }
+
+        /* ── Status bar below board ── */
+        .status-bar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.85rem 1.1rem;
+        }
+
+        .turn-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            font-weight: 600;
+            color: var(--text2);
+        }
+
+        .turn-disc {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+
+        .turn-disc.p1 {
+            background: radial-gradient(circle at 35% 35%, #5C9EFF, var(--primary));
+            box-shadow: 0 0 10px rgba(41, 121, 255, 0.5);
+        }
+
+        .turn-disc.p2 {
+            background: radial-gradient(circle at 35% 35%, #40f0ff, var(--accent));
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+        }
+
+        .result-text {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text3);
+        }
+
+        .result-text.win-p1 { color: var(--primary-light); }
+        .result-text.win-p2 { color: var(--accent); }
+        .result-text.draw   { color: var(--text2); }
+
+        /* ── Right sidebar ── */
+        .side {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Override hub h1 size */
+        h1 {
+            font-size: clamp(1.9rem, 3.5vw, 2.8rem);
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            line-height: 1.08;
+            margin-bottom: 0.75rem;
+        }
+
+        h1 span { color: var(--primary-light); }
+
+        .sub {
+            color: var(--text2);
+            font-size: 0.96rem;
+            line-height: 1.7;
+            margin-bottom: 1.25rem;
+        }
+
+        /* ── Stats grid ── */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .stat {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.85rem;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 1.7rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .stat-num.p1 { color: var(--primary-light); }
+        .stat-num.p2 { color: var(--accent); }
+        .stat-num.neutral { color: var(--text2); }
+
+        .stat-lbl {
+            font-size: 0.72rem;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-top: 4px;
+        }
+
+        /* ── Turn status pill ── */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 50px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            margin-bottom: 1.1rem;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .status-pill.p1 {
+            background: rgba(41, 121, 255, 0.12);
+            border: 1px solid rgba(41, 121, 255, 0.3);
+            color: var(--primary-light);
+        }
+
+        .status-pill.p2 {
+            background: var(--accent-dim);
+            border: 1px solid rgba(0, 229, 255, 0.22);
+            color: var(--accent);
+        }
+
+        .status-pill.end {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            color: var(--text2);
+        }
+
+        .pill-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* ── Rules ── */
+        .rules {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .rule {
+            display: flex;
+            gap: 0.75rem;
+            color: var(--text2);
+            font-size: 0.87rem;
+            line-height: 1.5;
+        }
+
+        .rule .material-icons-round {
+            color: var(--primary-light);
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* ── Actions ── */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .actions .btn {
+            padding: 12px 20px;
+            font-weight: 700;
+        }
+
+        /* ── History ── */
+        .history {
+            padding-top: 1.1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .history h2 {
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 0.65rem;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            font-size: 0.81rem;
+            color: var(--text3);
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .history-list .empty { color: var(--text3); }
+
+        .hist-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .hist-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .hist-dot.p1 { background: var(--primary); }
+        .hist-dot.p2 { background: var(--accent); }
+        .hist-dot.draw { background: var(--text3); }
+
+        /* ── Responsive ── */
+        @media (max-width: 860px) {
+            body { overflow-y: auto; }
+
+            .game-viewport {
+                height: auto;
+                min-height: 100svh;
+            }
+
+            .game-area {
+                overflow-y: visible;
+                padding: 1.5rem 4vw;
+            }
+
+            .game-shell {
+                grid-template-columns: 1fr;
+                align-items: start;
+            }
+
+            .side {
+                order: 2;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .game-area {
+                padding: 1rem 4vw;
+            }
+
+            .board-panel {
+                padding: 1rem;
+            }
+
+            .board-grid {
+                gap: 4px;
+                padding: 7px;
+            }
+
+            h1 {
+                font-size: clamp(1.7rem, 7vw, 2.4rem);
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header-placeholder"></div>
+
+    <div class="game-viewport">
+        <main class="game-area">
+            <div class="game-shell">
+
+                <!-- ── Left panel: board ── -->
+                <section class="panel board-panel">
+
+                    <!-- Column click targets + ghost disc -->
+                    <div class="col-headers" id="colHeaders" aria-label="Select column to drop disc">
+                        <!-- Buttons injected by JS -->
+                    </div>
+
+                    <!-- 7×6 board grid -->
+                    <div class="board-grid" id="boardGrid" aria-label="Connect Four game board">
+                        <!-- 42 cells injected by JS -->
+                    </div>
+
+                    <!-- Status bar below board -->
+                    <div class="status-bar" aria-live="polite">
+                        <div class="turn-indicator">
+                            <div class="turn-disc p1" id="turnDisc"></div>
+                            <span id="turnText">Player 1's turn</span>
+                        </div>
+                        <div class="result-text" id="resultText">Drop a disc to begin.</div>
+                    </div>
+
+                </section>
+
+                <!-- ── Right sidebar ── -->
+                <aside class="panel side">
+
+                    <div class="s-label">Strategy Game</div>
+                    <h1>Connect <span>Four</span></h1>
+                    <p class="sub">Drop coloured discs to connect four in a row — horizontally, vertically, or diagonally. Outsmart your opponent before they do.</p>
+
+                    <!-- Stats -->
+                    <div class="stats" aria-label="Session scores">
+                        <div class="stat">
+                            <div class="stat-num p1" id="statP1">0</div>
+                            <div class="stat-lbl">Player 1 Wins</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-num p2" id="statP2">0</div>
+                            <div class="stat-lbl">Player 2 Wins</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-num neutral" id="statDraws">0</div>
+                            <div class="stat-lbl">Draws</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-num neutral" id="statRounds">0</div>
+                            <div class="stat-lbl">Rounds</div>
+                        </div>
+                    </div>
+
+                    <!-- Status pill -->
+                    <div class="status-pill p1" id="statusPill">
+                        <div class="pill-dot"></div>
+                        <span id="pillText">Player 1's turn</span>
+                    </div>
+
+                    <!-- Rules -->
+                    <div class="rules">
+                        <div class="rule">
+                            <span class="material-icons-round">swap_vert</span>
+                            Click a column to drop your disc — it falls to the lowest empty row.
+                        </div>
+                        <div class="rule">
+                            <span class="material-icons-round">grid_on</span>
+                            Connect 4 discs in a row: horizontal, vertical, or diagonal to win.
+                        </div>
+                        <div class="rule">
+                            <span class="material-icons-round">person</span>
+                            Player 1 is blue, Player 2 is cyan. Player 1 always goes first each round.
+                        </div>
+                        <div class="rule">
+                            <span class="material-icons-round">emoji_events</span>
+                            Winning discs pulse with a glow. Scores persist until you reset the match.
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="actions">
+                        <button class="btn btn-p d-inline-flex align-items-center justify-content-center gap-2" id="newRoundBtn">
+                            <span class="material-icons-round" style="font-size:17px">refresh</span>New Round
+                        </button>
+                        <button class="btn btn-o d-inline-flex align-items-center justify-content-center gap-2" id="resetMatchBtn">
+                            <span class="material-icons-round" style="font-size:17px">restart_alt</span>Reset Match
+                        </button>
+                        <a href="/" class="btn btn-o d-inline-flex align-items-center justify-content-center gap-2">
+                            <span class="material-icons-round" style="font-size:17px">arrow_back</span>All Games
+                        </a>
+                    </div>
+
+                    <!-- Round history -->
+                    <div class="history">
+                        <h2>Round History</h2>
+                        <div class="history-list" id="historyList">
+                            <div class="empty">No rounds completed yet.</div>
+                        </div>
+                    </div>
+
+                </aside>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="/assets/js/games.js"></script>
+    <script>
+        /* ─────────────────────────────────────────────
+           Connect Four — Game Logic
+        ───────────────────────────────────────────── */
+
+        const ROWS = 6;
+        const COLS = 7;
+
+        // ── DOM refs ──
+        const boardGrid   = document.getElementById('boardGrid');
+        const colHeaders  = document.getElementById('colHeaders');
+        const turnDisc    = document.getElementById('turnDisc');
+        const turnText    = document.getElementById('turnText');
+        const resultText  = document.getElementById('resultText');
+        const statusPill  = document.getElementById('statusPill');
+        const pillText    = document.getElementById('pillText');
+        const historyList = document.getElementById('historyList');
+        const statP1      = document.getElementById('statP1');
+        const statP2      = document.getElementById('statP2');
+        const statDraws   = document.getElementById('statDraws');
+        const statRounds  = document.getElementById('statRounds');
+
+        // ── Game state ──
+        let board       = [];  // board[row][col] = 0|1|2
+        let currentPlayer = 1;
+        let locked      = false;
+        let roundCount  = 0;
+        let scores      = { 1: 0, 2: 0, draws: 0 };
+        let history     = [];
+
+        // ── Cell elements: cellEls[row][col] ──
+        const cellEls = [];
+
+        /* ────── Build DOM ────── */
+        function buildBoard() {
+            boardGrid.innerHTML = '';
+            colHeaders.innerHTML = '';
+            cellEls.length = 0;
+
+            // Column header buttons
+            for (let c = 0; c < COLS; c++) {
+                const btn = document.createElement('button');
+                btn.className = 'col-header-btn';
+                btn.setAttribute('aria-label', `Drop in column ${c + 1}`);
+                btn.dataset.col = c;
+
+                // Ghost disc inside header button
+                const ghost = document.createElement('div');
+                ghost.className = 'ghost-disc p1';
+                btn.appendChild(ghost);
+
+                btn.addEventListener('click', () => handleColClick(c));
+                colHeaders.appendChild(btn);
+            }
+
+            // 42 cells (row 0 = top)
+            for (let r = 0; r < ROWS; r++) {
+                cellEls[r] = [];
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+
+                    const disc = document.createElement('div');
+                    disc.className = 'disc';
+                    cell.appendChild(disc);
+
+                    boardGrid.appendChild(cell);
+                    cellEls[r][c] = cell;
+                }
+            }
+        }
+
+        /* ────── Game init ────── */
+        function initBoard() {
+            board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+        }
+
+        function newRound(keepScores = true) {
+            initBoard();
+            currentPlayer = 1;
+            locked = false;
+
+            // Clear all cell visuals
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = cellEls[r][c];
+                    const disc = cell.querySelector('.disc');
+                    cell.className = 'cell';
+                    disc.className = 'disc';
+                    disc.style.transform = '';
+                }
+            }
+
+            // Reset column headers
+            const headerBtns = colHeaders.querySelectorAll('.col-header-btn');
+            headerBtns.forEach(btn => {
+                btn.classList.remove('full');
+                const ghost = btn.querySelector('.ghost-disc');
+                ghost.className = 'ghost-disc p1';
+            });
+
+            updateStatusDisplay('turn');
+        }
+
+        function resetMatch() {
+            scores = { 1: 0, 2: 0, draws: 0 };
+            roundCount = 0;
+            history = [];
+            historyList.innerHTML = '<div class="empty">No rounds completed yet.</div>';
+            statP1.textContent = '0';
+            statP2.textContent = '0';
+            statDraws.textContent = '0';
+            statRounds.textContent = '0';
+            newRound(false);
+        }
+
+        /* ────── Find landing row ────── */
+        function getDropRow(col) {
+            for (let r = ROWS - 1; r >= 0; r--) {
+                if (board[r][col] === 0) return r;
+            }
+            return -1; // column full
+        }
+
+        /* ────── Win check ────── */
+        function checkWin(row, col, player) {
+            const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
+            for (const [dr, dc] of dirs) {
+                let count = 1;
+                const cells = [[row, col]];
+
+                for (let d = 1; d < 4; d++) {
+                    const r = row + dr * d, c = col + dc * d;
+                    if (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === player) {
+                        count++;
+                        cells.push([r, c]);
+                    } else break;
+                }
+                for (let d = 1; d < 4; d++) {
+                    const r = row - dr * d, c = col - dc * d;
+                    if (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === player) {
+                        count++;
+                        cells.push([r, c]);
+                    } else break;
+                }
+
+                if (count >= 4) return cells; // return winning cell coords
+            }
+            return null;
+        }
+
+        /* ────── Check draw (all cells filled) ────── */
+        function checkDraw() {
+            return board[0].every(v => v !== 0);
+        }
+
+        /* ────── Update header ghost disc colours ────── */
+        function updateGhostColour() {
+            const cls = currentPlayer === 1 ? 'p1' : 'p2';
+            colHeaders.querySelectorAll('.col-header-btn').forEach(btn => {
+                if (btn.classList.contains('full')) return;
+                const ghost = btn.querySelector('.ghost-disc');
+                ghost.className = `ghost-disc ${cls}`;
+                btn.classList.toggle('p2-hover', currentPlayer === 2);
+            });
+        }
+
+        /* ────── Handle column click ────── */
+        function handleColClick(col) {
+            if (locked) return;
+
+            const row = getDropRow(col);
+            if (row === -1) return; // full column — ignore
+
+            // Place in data model
+            board[row][col] = currentPlayer;
+
+            // Animate disc drop
+            animateDrop(row, col, currentPlayer, () => {
+                // Check win
+                const winCells = checkWin(row, col, currentPlayer);
+                if (winCells) {
+                    finishWinner(currentPlayer, winCells);
+                    return;
+                }
+                // Check draw
+                if (checkDraw()) {
+                    finishDraw();
+                    return;
+                }
+                // Mark column full if needed
+                if (getDropRow(col) === -1) {
+                    const headerBtns = colHeaders.querySelectorAll('.col-header-btn');
+                    headerBtns[col].classList.add('full');
+                }
+                // Next player
+                currentPlayer = currentPlayer === 1 ? 2 : 1;
+                updateGhostColour();
+                updateStatusDisplay('turn');
+            });
+        }
+
+        /* ────── Animate disc drop ────── */
+        function animateDrop(row, col, player, onDone) {
+            const cell = cellEls[row][col];
+            const disc = cell.querySelector('.disc');
+
+            // Calculate translateY: disc starts above the board, at row=0 position
+            // We need it to "fall from top". The disc starts with translateY(-400%)
+            // which places it above the viewport of the cell. We animate to translateY(0).
+            const pCls = player === 1 ? 'p1' : 'p2';
+            disc.className = `disc ${pCls}`;
+            disc.style.transform = 'translateY(-400%)';
+
+            // Force reflow so transition fires
+            disc.offsetHeight; // eslint-disable-line no-unused-expressions
+
+            disc.classList.add('landed');
+            disc.style.transform = '';
+
+            // Wait for transition to finish (~250ms)
+            const onEnd = () => {
+                disc.removeEventListener('transitionend', onEnd);
+                onDone();
+            };
+            disc.addEventListener('transitionend', onEnd);
+        }
+
+        /* ────── Finish win ────── */
+        function finishWinner(player, winCells) {
+            locked = true;
+            scores[player]++;
+            roundCount++;
+
+            // Highlight winning cells, dim others
+            const winSet = new Set(winCells.map(([r, c]) => `${r},${c}`));
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = cellEls[r][c];
+                    if (winSet.has(`${r},${c}`)) {
+                        cell.classList.add(player === 1 ? 'win-p1' : 'win-p2');
+                    } else if (board[r][c] !== 0) {
+                        cell.classList.add('dimmed');
+                    }
+                }
+            }
+
+            // Disable all column headers
+            colHeaders.querySelectorAll('.col-header-btn').forEach(btn => {
+                btn.classList.add('full');
+            });
+
+            updateStatusDisplay('win', player);
+            addHistory('win', player);
+            updateScoreDisplay();
+        }
+
+        /* ────── Finish draw ────── */
+        function finishDraw() {
+            locked = true;
+            scores.draws++;
+            roundCount++;
+
+            colHeaders.querySelectorAll('.col-header-btn').forEach(btn => {
+                btn.classList.add('full');
+            });
+
+            updateStatusDisplay('draw');
+            addHistory('draw');
+            updateScoreDisplay();
+        }
+
+        /* ────── Update status display ────── */
+        function updateStatusDisplay(type, player) {
+            const p = player || currentPlayer;
+            const isP1 = p === 1;
+
+            if (type === 'turn') {
+                const label = `Player ${currentPlayer}'s turn`;
+                turnDisc.className = `turn-disc ${currentPlayer === 1 ? 'p1' : 'p2'}`;
+                turnText.textContent = label;
+                resultText.textContent = 'Choose a column.';
+                resultText.className = 'result-text';
+
+                statusPill.className = `status-pill ${currentPlayer === 1 ? 'p1' : 'p2'}`;
+                pillText.textContent = label;
+
+            } else if (type === 'win') {
+                const label = `Player ${p} wins!`;
+                turnDisc.className = `turn-disc ${isP1 ? 'p1' : 'p2'}`;
+                turnText.textContent = label;
+                resultText.textContent = label;
+                resultText.className = `result-text ${isP1 ? 'win-p1' : 'win-p2'}`;
+
+                statusPill.className = 'status-pill end';
+                pillText.textContent = label;
+
+            } else if (type === 'draw') {
+                turnText.textContent = 'It\'s a draw!';
+                resultText.textContent = 'It\'s a draw!';
+                resultText.className = 'result-text draw';
+
+                statusPill.className = 'status-pill end';
+                pillText.textContent = 'Draw — New Round?';
+            }
+        }
+
+        /* ────── Update score display ────── */
+        function updateScoreDisplay() {
+            statP1.textContent     = scores[1];
+            statP2.textContent     = scores[2];
+            statDraws.textContent  = scores.draws;
+            statRounds.textContent = roundCount;
+        }
+
+        /* ────── Add history entry ────── */
+        function addHistory(type, player) {
+            const roundNum = roundCount;
+            let text, dotCls;
+
+            if (type === 'win') {
+                text   = `Round ${roundNum}: Player ${player} won`;
+                dotCls = player === 1 ? 'p1' : 'p2';
+            } else {
+                text   = `Round ${roundNum}: Draw`;
+                dotCls = 'draw';
+            }
+
+            history.unshift({ text, dotCls });
+            if (history.length > 5) history.pop();
+
+            // Render
+            historyList.innerHTML = '';
+            history.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'hist-item';
+                el.innerHTML = `<div class="hist-dot ${item.dotCls}"></div><span>${item.text}</span>`;
+                historyList.appendChild(el);
+            });
+        }
+
+        /* ────── Event listeners ────── */
+        document.getElementById('newRoundBtn').addEventListener('click', () => newRound(true));
+        document.getElementById('resetMatchBtn').addEventListener('click', resetMatch);
+
+        /* ────── Init ────── */
+        buildBoard();
+        newRound(false);
+    </script>
+</body>
+
+</html>

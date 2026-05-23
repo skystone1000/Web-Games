@@ -54,7 +54,7 @@ One agent updates:
 - `body::before` ambient radial gradient background
 - All game CSS in `<head> <style>` — no external game CSS files
 - All game JS in `<body> <script>` — no external game JS files
-- `<script src="../assets/js/games.js">` before game script
+- `<script src="/assets/js/games.js">` before game script
 - Design tokens only — no invented colour values
 - Bootstrap layout utilities only — no Bootstrap components
 

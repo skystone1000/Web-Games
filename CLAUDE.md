@@ -43,7 +43,7 @@ Every page has `<div id="header-placeholder">` at top of body.
 
 ### Asset paths
 - From **hub** (`index.html`): `./assets/css/games.css`, `./assets/js/games.js`
-- From **game pages** (`[game]/index.html`): `../assets/css/games.css`, `../assets/js/games.js`
+- From **game pages** (`[game]/index.html`): `/assets/css/games.css`, `/assets/js/games.js`
 
 ### Game pages — required setup
 Every game page MUST have:
@@ -59,7 +59,7 @@ Every game page MUST have:
      box-shadow: 0 1px 0 var(--border);
    }
    ```
-5. `<script src="../assets/js/games.js">` before the game's own `<script>`
+5. `<script src="/assets/js/games.js">` before the game's own `<script>`
 6. All game CSS in `<style>` in `<head>` — no external game CSS files
 7. All game logic in `<script>` at end of body — no external game JS files
 

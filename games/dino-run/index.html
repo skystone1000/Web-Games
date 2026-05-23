@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Dino Run — Games</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="/assets/css/games.css" />
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            position: fixed;
+            inset: 0;
+            touch-action: none;
+        }
+
+        /* Force nav glass — no scroll on game pages */
+        nav {
+            background: rgba(8, 13, 26, 0.92);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0 1px 0 var(--border);
+        }
+
+        /* Ambient background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 70% 40%, rgba(41, 121, 255, 0.14) 0%, transparent 70%),
+                radial-gradient(ellipse 45% 45% at 15% 85%, rgba(0, 229, 255, 0.08) 0%, transparent 60%);
+        }
+
+        .game-viewport {
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            width: 100vw;
+            height: 100dvh;
+            padding-top: 66px;
+        }
+
+        #canvas-wrap {
+            flex: 1 1 auto;
+            width: 100%;
+            min-height: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #game-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        /* Overlay */
+        #overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            gap: 0.85rem;
+            padding: 18px;
+            background: rgba(8, 13, 26, 0.82);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+
+        #overlay.hidden {
+            display: none !important;
+        }
+
+        /* Controls hint */
+        .hints {
+            position: absolute;
+            bottom: 12px;
+            right: 16px;
+            gap: 8px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .hint {
+            gap: 4px;
+            font-size: 0.68rem;
+            color: var(--text3);
+        }
+
+        .k {
+            display: inline-block;
+            padding: 1px 6px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: var(--text2);
+        }
+
+        @media (max-width: 640px) {
+            .hints {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header-placeholder"></div>
+
+    <div class="game-viewport">
+        <div id="canvas-wrap">
+            <canvas id="game-canvas"></canvas>
+
+            <div id="overlay" class="d-flex flex-column align-items-center justify-content-center">
+                <div id="ov-emoji" style="font-size:clamp(2.1rem,8vw,3.2rem)">🦕</div>
+                <div id="ov-title" style="font-size:clamp(1.15rem,4vw,1.5rem);font-weight:800">Dino Run</div>
+                <div id="ov-sub" style="font-size:0.85rem;color:var(--text2);text-align:center;max-width:min(440px,92vw);line-height:1.5">
+                    Press Space or tap to jump. Hold Down to duck. Avoid cacti and pterodactyls!
+                </div>
+                <button class="btn btn-p d-inline-flex align-items-center gap-2" id="ov-btn" style="margin-top:0.35rem">
+                    <span class="material-icons-round" style="font-size:17px">play_arrow</span>Start Game
+                </button>
+            </div>
+
+            <div class="hints d-flex flex-column align-items-end">
+                <span class="hint d-inline-flex align-items-center"><span class="k">Space</span>&nbsp;/ <span class="k">↑</span>&nbsp;jump</span>
+                <span class="hint d-inline-flex align-items-center"><span class="k">↓</span>&nbsp;/ <span class="k">S</span>&nbsp;duck</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/js/games.js"></script>
+    <script>
+        // ── Canvas & Context ─────────────────────────────────────
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const overlay = document.getElementById('overlay');
+        const ovEmoji = document.getElementById('ov-emoji');
+        const ovTitle = document.getElementById('ov-title');
+        const ovSub = document.getElementById('ov-sub');
+        const ovBtn = document.getElementById('ov-btn');
+
+        // ── Constants ────────────────────────────────────────────
+        const GROUND_OFFSET = 60;
+        const DINO_W = 44, DINO_H = 52, DINO_DUCK_H = 28;
+        const GRAVITY = 0.6, JUMP_VY = -13;
+
+        // ── State ────────────────────────────────────────────────
+        let state = 'idle'; // idle | running | dead
+        let dino = { x: 80, y: 0, vy: 0, onGround: true, ducking: false, runFrame: 0, runTick: 0 };
+        let obstacles = [], nextSpawnIn = 60, frameCount = 0, speed = 6;
+        let score = 0, frameScore = 0;
+        let best = Number(localStorage.getItem('dinoBest') || 0);
+        let flashAlpha = 0;
+        let lastTs = 0;
+        let animId = null;
+        const keys = new Set();
+
+        // ── Canvas sizing ────────────────────────────────────────
+        function resize() {
+            const wrap = canvas.parentElement;
+            canvas.width = wrap.clientWidth;
+            canvas.height = wrap.clientHeight;
+        }
+
+        // ── Drawing helpers ──────────────────────────────────────
+        function drawDino(x, groundY, isDucking, runFrame) {
+            const w = isDucking ? 58 : DINO_W;
+            const h = isDucking ? DINO_DUCK_H : DINO_H;
+            const y = groundY - h;
+
+            ctx.fillStyle = '#5C9EFF';
+            ctx.fillRect(x, y, w, h);
+
+            // Eye
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(x + w - 12, y + 7, 7, 7);
+            ctx.fillStyle = '#080D1A';
+            ctx.fillRect(x + w - 10, y + 9, 4, 4);
+
+            // Legs (only when standing)
+            if (!isDucking) {
+                ctx.fillStyle = '#2979FF';
+                if (runFrame % 2 === 0) {
+                    ctx.fillRect(x + 8, groundY, 14, 10);
+                    ctx.fillRect(x + 24, groundY - 8, 14, 10);
+                } else {
+                    ctx.fillRect(x + 8, groundY - 8, 14, 10);
+                    ctx.fillRect(x + 24, groundY, 14, 10);
+                }
+            }
+        }
+
+        function drawCactus(obs, groundY) {
+            ctx.fillStyle = '#34D399';
+            if (obs.variant === 0) {         // small
+                ctx.fillRect(obs.x + 10, groundY - 40, 14, 40);
+                ctx.fillRect(obs.x, groundY - 25, 34, 12);
+            } else if (obs.variant === 1) {  // tall
+                ctx.fillRect(obs.x + 10, groundY - 62, 14, 62);
+                ctx.fillRect(obs.x, groundY - 38, 34, 12);
+            } else {                          // cluster
+                ctx.fillRect(obs.x + 8, groundY - 46, 12, 46);
+                ctx.fillRect(obs.x, groundY - 30, 28, 11);
+                ctx.fillRect(obs.x + 36, groundY - 38, 12, 38);
+                ctx.fillRect(obs.x + 28, groundY - 24, 22, 11);
+            }
+        }
+
+        function drawPtero(ptero) {
+            ctx.fillStyle = '#8B5CF6';
+            ctx.fillRect(ptero.x + 8, ptero.y - 16, 28, 16); // body
+            if (ptero.wingFrame === 0) {
+                ctx.fillRect(ptero.x, ptero.y - 30, 12, 14);
+                ctx.fillRect(ptero.x + 36, ptero.y - 30, 12, 14);
+            } else {
+                ctx.fillRect(ptero.x, ptero.y - 2, 12, 14);
+                ctx.fillRect(ptero.x + 36, ptero.y - 2, 12, 14);
+            }
+            ctx.fillRect(ptero.x + 36, ptero.y - 10, 14, 7); // beak
+        }
+
+        // ── Obstacle spawning ────────────────────────────────────
+        function spawnObstacle(W, groundY) {
+            const spawnPtero = score > 200 && Math.random() < Math.min(0.4, 0.15 + score / 2000);
+            if (spawnPtero) {
+                const heights = [groundY - 28, groundY - 58, groundY - 105];
+                const h = heights[Math.floor(Math.random() * 3)];
+                obstacles.push({
+                    x: W + 10, y: h, type: 'ptero', variant: 0,
+                    wingFrame: 0, wingTick: 0,
+                    hitW: 40, hitH: 18, hitOffY: -16
+                });
+            } else {
+                const v = Math.floor(Math.random() * 3);
+                const w = v === 2 ? 50 : 34;
+                obstacles.push({
+                    x: W + 10, type: 'cactus', variant: v,
+                    hitW: w - 14, hitH: v === 1 ? 62 : 46, hitOffY: v === 1 ? -62 : -46
+                });
+            }
+            const gap = Math.max(200, 400 - speed * 15);
+            nextSpawnIn = Math.floor((gap + Math.random() * 250) / speed);
+        }
+
+        // ── Collision detection ──────────────────────────────────
+        function collides(obs, groundY) {
+            const dW = dino.ducking ? 46 : DINO_W * 0.8;
+            const dH = dino.ducking ? DINO_DUCK_H * 0.8 : DINO_H * 0.8;
+            const dx = dino.x + 4;
+            const dy = groundY + dino.y - dH;
+            const ox = obs.x + (obs.type === 'cactus' ? 7 : 0);
+            const oy = obs.type === 'ptero' ? obs.y + obs.hitOffY : groundY + obs.hitOffY;
+            return dx < ox + obs.hitW && dx + dW > ox && dy < oy + obs.hitH && dy + dH > oy;
+        }
+
+        // ── Game loop ────────────────────────────────────────────
+        function loop(ts) {
+            if (state !== 'running') return;
+            const dt = Math.min((ts - (lastTs || ts)) / 16.67, 3);
+            lastTs = ts;
+            update(dt);
+            draw();
+            animId = requestAnimationFrame(loop);
+        }
+
+        function update(dt) {
+            const W = canvas.width, H = canvas.height;
+            const groundY = H - GROUND_OFFSET;
+
+            // Duck state from held keys
+            dino.ducking = keys.has('ArrowDown') || keys.has('s') || keys.has('S');
+
+            // Score
+            frameScore += dt;
+            score = frameScore / 10;
+            if (score > best) {
+                best = score;
+                localStorage.setItem('dinoBest', Math.floor(best));
+            }
+
+            // Speed ramp
+            speed = Math.min(14, 6 + frameScore * 0.001);
+
+            // Dino physics
+            if (!dino.onGround) {
+                dino.vy += GRAVITY * dt;
+                dino.y += dino.vy * dt;
+            }
+            if (dino.y >= 0) {
+                dino.y = 0;
+                dino.vy = 0;
+                dino.onGround = true;
+            }
+
+            // Dino run animation
+            if (dino.onGround && !dino.ducking) {
+                dino.runTick += dt;
+                if (dino.runTick > 8) {
+                    dino.runFrame++;
+                    dino.runTick = 0;
+                }
+            }
+
+            // Obstacles
+            nextSpawnIn -= dt;
+            if (nextSpawnIn <= 0) spawnObstacle(W, groundY);
+            obstacles.forEach(o => {
+                o.x -= speed * dt;
+                if (o.type === 'ptero') {
+                    o.wingTick += dt;
+                    if (o.wingTick > 12) {
+                        o.wingFrame = 1 - o.wingFrame;
+                        o.wingTick = 0;
+                    }
+                }
+            });
+            obstacles = obstacles.filter(o => o.x + 60 > 0);
+
+            // Collision
+            for (const obs of obstacles) {
+                if (collides(obs, groundY)) {
+                    die();
+                    return;
+                }
+            }
+
+            // Flash at milestones (every 100 pts)
+            const prevScore = score - dt / 10;
+            if (Math.floor(score / 100) > Math.floor(prevScore / 100) && Math.floor(score) > 0) {
+                flashAlpha = 1;
+            }
+            if (flashAlpha > 0) flashAlpha = Math.max(0, flashAlpha - 0.08 * dt);
+        }
+
+        function draw() {
+            const W = canvas.width, H = canvas.height;
+            const groundY = H - GROUND_OFFSET;
+
+            // Sky (day/night cycle every 700 pts)
+            const nightCycle = Math.floor(score / 700) % 2 === 1;
+            ctx.fillStyle = nightCycle ? '#0D1526' : '#080D1A';
+            ctx.fillRect(0, 0, W, H);
+
+            // Flash overlay
+            if (flashAlpha > 0) {
+                ctx.fillStyle = `rgba(255,255,255,${flashAlpha * 0.15})`;
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            // Ground line
+            ctx.strokeStyle = '#8A99B3';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            ctx.lineTo(W, groundY);
+            ctx.stroke();
+
+            // Obstacles
+            obstacles.forEach(o => o.type === 'cactus' ? drawCactus(o, groundY) : drawPtero(o));
+
+            // Dino (dino.y is offset from ground, <=0)
+            drawDino(dino.x, groundY + dino.y, dino.ducking, dino.runFrame);
+
+            // HUD — scores
+            ctx.fillStyle = 'rgba(138,153,179,0.8)';
+            ctx.font = '700 16px Inter,sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('HI  ' + String(Math.floor(best)).padStart(5, '0'), W - 16, 36);
+            ctx.fillStyle = '#E8EDF5';
+            ctx.fillText(String(Math.floor(score)).padStart(5, '0'), W - 16, 58);
+        }
+
+        // ── Die sequence ─────────────────────────────────────────
+        function die() {
+            state = 'dead';
+            cancelAnimationFrame(animId);
+            draw(); // final frame
+            setTimeout(() => {
+                ovEmoji.textContent = '💀';
+                ovTitle.textContent = 'Game Over';
+                ovSub.innerHTML = `Score: <strong>${Math.floor(score)}</strong>&nbsp;&nbsp;•&nbsp;&nbsp;Best: <strong>${Math.floor(best)}</strong>`;
+                ovBtn.innerHTML = `<span class="material-icons-round" style="font-size:17px">refresh</span>Try Again`;
+                overlay.classList.remove('hidden');
+            }, 500);
+        }
+
+        // ── Start / reset ────────────────────────────────────────
+        function startGame() {
+            overlay.classList.add('hidden');
+            resize();
+            // Reset game state
+            dino = { x: 80, y: 0, vy: 0, onGround: true, ducking: false, runFrame: 0, runTick: 0 };
+            obstacles = [];
+            nextSpawnIn = 60;
+            speed = 6;
+            score = 0;
+            frameScore = 0;
+            flashAlpha = 0;
+            lastTs = 0;
+            state = 'running';
+            animId = requestAnimationFrame(loop);
+        }
+
+        // ── Controls ─────────────────────────────────────────────
+        document.addEventListener('keydown', e => {
+            keys.add(e.key);
+            if (['Space', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) e.preventDefault();
+
+            // Jump
+            if ((e.key === ' ' || e.key === 'ArrowUp') && state === 'running' && dino.onGround && !dino.ducking) {
+                dino.vy = JUMP_VY;
+                dino.onGround = false;
+            }
+
+            // Start / retry with Space
+            if (e.key === ' ' && (state === 'idle' || state === 'dead')) startGame();
+        });
+
+        document.addEventListener('keyup', e => keys.delete(e.key));
+
+        // Canvas click: start/retry or jump
+        canvas.addEventListener('click', () => {
+            if (state === 'idle' || state === 'dead') {
+                startGame();
+            } else if (state === 'running' && dino.onGround && !dino.ducking) {
+                dino.vy = JUMP_VY;
+                dino.onGround = false;
+            }
+        });
+
+        // Touch controls: tap = jump, hold bottom half = duck
+        let touchStartY = 0;
+        canvas.addEventListener('touchstart', e => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            touchStartY = touch.clientY;
+
+            if (state === 'idle' || state === 'dead') {
+                startGame();
+                return;
+            }
+
+            // Tap on bottom third of canvas = duck; elsewhere = jump
+            const canvasRect = canvas.getBoundingClientRect();
+            const relY = touch.clientY - canvasRect.top;
+            if (relY > canvasRect.height * 0.67) {
+                keys.add('ArrowDown');
+            } else if (state === 'running' && dino.onGround && !dino.ducking) {
+                dino.vy = JUMP_VY;
+                dino.onGround = false;
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', e => {
+            e.preventDefault();
+            keys.delete('ArrowDown');
+        }, { passive: false });
+
+        // Overlay button
+        ovBtn.addEventListener('click', () => {
+            if (state === 'idle' || state === 'dead') startGame();
+        });
+
+        // ── Resize handling ──────────────────────────────────────
+        let resizeTimer;
+        function handleResize() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                resize();
+                if (state === 'idle') {
+                    drawIdle();
+                } else if (state === 'running' || state === 'dead') {
+                    cancelAnimationFrame(animId);
+                    state = 'idle';
+                    obstacles = [];
+                    score = 0;
+                    frameScore = 0;
+                    ovEmoji.textContent = '🦕';
+                    ovTitle.textContent = 'Dino Run';
+                    ovSub.textContent = 'Press Space or tap to jump. Hold Down to duck. Avoid cacti and pterodactyls!';
+                    ovBtn.innerHTML = `<span class="material-icons-round" style="font-size:17px">play_arrow</span>Start Game`;
+                    overlay.classList.remove('hidden');
+                    drawIdle();
+                }
+            }, 150);
+        }
+
+        window.addEventListener('resize', handleResize, { passive: true });
+        window.visualViewport?.addEventListener('resize', handleResize, { passive: true });
+
+        // ── Idle animation ───────────────────────────────────────
+        function drawIdle() {
+            const W = canvas.width, H = canvas.height;
+            const groundY = H - GROUND_OFFSET;
+            ctx.fillStyle = '#080D1A';
+            ctx.fillRect(0, 0, W, H);
+            ctx.strokeStyle = '#8A99B3';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            ctx.lineTo(W, groundY);
+            ctx.stroke();
+            // Gently bob the dino
+            const bobY = Math.sin(Date.now() / 450) * 4;
+            drawDino(80, groundY + bobY, false, Math.floor(Date.now() / 200) % 2);
+        }
+
+        function idleTick() {
+            if (state === 'idle') {
+                drawIdle();
+                requestAnimationFrame(idleTick);
+            }
+        }
+
+        // ── Boot ─────────────────────────────────────────────────
+        resize();
+        idleTick();
+    </script>
+</body>
+
+</html>

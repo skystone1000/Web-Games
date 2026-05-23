@@ -43,7 +43,7 @@ Header has NO inline scripts. All behaviour wired by `games.js` after inject.
 - Nav gets `scrolled` class dynamically as user scrolls
 
 ### Game pages (`[game]/index.html`)
-- Imports: `../assets/css/games.css`, `../assets/js/games.js`
+- Imports: `/assets/css/games.css`, `/assets/js/games.js`
 - **No scroll** — `body { overflow: hidden }`, `.game-viewport { height: 100vh }`
 - Nav glass forced via CSS override (scroll never fires since `body` is `overflow: hidden`)
 - All game CSS in `<style>` in same file

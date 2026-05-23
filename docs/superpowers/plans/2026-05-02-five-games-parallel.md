@@ -26,7 +26,7 @@ Every `index.html` starts with this exact `<head>`:
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="../assets/css/games.css" />
+    <link rel="stylesheet" href="/assets/css/games.css" />
     <style>
         /* REQUIRED: always-on nav glass */
         nav {
@@ -54,7 +54,7 @@ Every `index.html` starts with this exact `<head>`:
     <div class="game-viewport">
         <!-- game UI here -->
     </div>
-    <script src="../assets/js/games.js"></script>
+    <script src="/assets/js/games.js"></script>
     <script>
         /* game JS here */
     </script>

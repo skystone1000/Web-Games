@@ -51,8 +51,8 @@ Token reference:
 
 ## Individual Game Page Rules
 1. `body { overflow: hidden }` — no scroll ever
-2. `<link>` to `../assets/css/games.css`
-3. `<script src="../assets/js/games.js">` before game script
+2. `<link>` to `/assets/css/games.css`
+3. `<script src="/assets/js/games.js">` before game script
 4. `<div id="header-placeholder">` at top of body
 5. `<div class="game-viewport">` wraps entire game UI
 6. Override `.game-viewport` in `<style>` to `flex-direction: column` for HUD + canvas layout
