@@ -52,7 +52,7 @@
             flex: 1;
             position: relative;
             z-index: 1;
-            overflow-y: auto;
+            overflow: hidden;
             display: grid;
             align-items: start;
             justify-items: center;
@@ -94,8 +94,8 @@
             background: var(--bg2);
             border: 2px solid var(--border);
             border-radius: var(--rs);
-            width: 100%;
-            max-width: 340px;
+            width: min(100%, calc((100dvh - 140px) / 2));
+            max-width: 400px;
             aspect-ratio: 1 / 2;
         }
 
@@ -293,6 +293,17 @@
 
         /* ── Responsive ── */
         @media (max-width: 860px) {
+            body { overflow-y: auto; }
+
+            .game-viewport {
+                height: auto;
+                min-height: 100svh;
+            }
+
+            .game-area {
+                overflow-y: auto;
+            }
+
             .game-shell {
                 grid-template-columns: 1fr;
             }
@@ -302,6 +313,7 @@
             }
 
             #tetris-board {
+                width: min(100%, 280px);
                 max-width: 280px;
             }
         }

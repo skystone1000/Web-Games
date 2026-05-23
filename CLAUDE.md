@@ -23,15 +23,15 @@ Full architecture, codebase reference, and feature descriptions live here:
 
 ## File Structure (quick reference)
 ```
-/index.html                  → hub page (game card grid — 3 live games)
-/includes/header.html        → nav fragment (fetched at runtime)
-/assets/css/games.css        → ALL shared styles (tokens + components)
-/assets/js/games.js          → header inject + hamburger + scroll reveal
-/snake/index.html            → Snake game (fully self-contained)
-/tic-tac-toe/index.html      → Tic Tac Toe (fully self-contained)
-/memory-cards/index.html     → Memory Cards (fully self-contained)
-/[game-name]/index.html      → pattern for future games
-/docs/                       → architecture, codebase, features docs
+/index.html                        → hub page (game card grid — 28 live games)
+/includes/header.html              → nav fragment (fetched at runtime)
+/assets/css/games.css              → ALL shared styles (tokens + components)
+/assets/js/games.js                → header inject + hamburger + scroll reveal
+/games/snake/index.html            → Snake game (fully self-contained)
+/games/tic-tac-toe/index.html      → Tic Tac Toe (fully self-contained)
+/games/memory-cards/index.html     → Memory Cards (fully self-contained)
+/games/[game-name]/index.html      → pattern for all games
+/docs/                             → architecture, codebase, features docs
 ```
 
 ## Critical Patterns
@@ -43,7 +43,7 @@ Every page has `<div id="header-placeholder">` at top of body.
 
 ### Asset paths
 - From **hub** (`index.html`): `./assets/css/games.css`, `./assets/js/games.js`
-- From **game pages** (`[game]/index.html`): `/assets/css/games.css`, `/assets/js/games.js`
+- From **game pages** (`games/[game]/index.html`): `/assets/css/games.css`, `/assets/js/games.js`
 
 ### Game pages — required setup
 Every game page MUST have:
@@ -64,7 +64,7 @@ Every game page MUST have:
 7. All game logic in `<script>` at end of body — no external game JS files
 
 ### Adding a new game
-1. Create `[game-name]/index.html` (copy snake as template)
+1. Create `games/[game-name]/index.html` (copy `/games/snake/index.html` as template)
 2. Add `<article class="game-card">` to `index.html` game grid
 3. Update `docs/FEATURES.md` with the new game's feature description
 4. Update `docs/CODEBASE.md` if the game introduces new patterns

@@ -5,9 +5,9 @@ A pure-static site (GitHub Pages) at `games.adityamahajan.in`. No build tools, n
 
 ## Site Map
 ```
-games.adityamahajan.in/          → index.html        (games hub)
-games.adityamahajan.in/snake/    → snake/index.html  (snake game)
-games.adityamahajan.in/[game]/   → [game]/index.html (pattern)
+games.adityamahajan.in/                 → index.html        (games hub)
+games.adityamahajan.in/games/snake/     → /games/snake/index.html  (snake game)
+games.adityamahajan.in/games/[game]/    → /games/[game]/index.html (pattern)
 ```
 
 ## Shared Infrastructure
@@ -42,7 +42,7 @@ Header has NO inline scripts. All behaviour wired by `games.js` after inject.
 - Scrollable page with hero + game card grid
 - Nav gets `scrolled` class dynamically as user scrolls
 
-### Game pages (`[game]/index.html`)
+### Game pages (`/games/[game]/index.html`)
 - Imports: `/assets/css/games.css`, `/assets/js/games.js`
 - **No scroll** — `body { overflow: hidden }`, `.game-viewport { height: 100vh }`
 - Nav glass forced via CSS override (scroll never fires since `body` is `overflow: hidden`)

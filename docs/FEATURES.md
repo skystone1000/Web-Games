@@ -32,7 +32,7 @@
 - Subtitle describing the project
 
 ### Game Card Grid
-- CSS `auto-fill minmax(300px, 1fr)` responsive grid — currently 3 live game cards
+- CSS `auto-fill minmax(300px, 1fr)` responsive grid — 28 live games
 - Each card: emoji thumbnail, title, description, tag row, play button
 - Hover: card lifts (translateY -5px), gradient top border appears, blue glow
 - **Live cards**: bright, fully clickable, `btn-p` play button
@@ -40,7 +40,7 @@
 
 ---
 
-## Snake (`/snake/`)
+## Snake (`/games/snake/`)
 
 ### Gameplay
 - Classic snake on a wrapping grid (edges teleport, no walls)
@@ -88,7 +88,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Tic Tac Toe (`/tic-tac-toe/`)
+## Tic Tac Toe (`/games/tic-tac-toe/`)
 
 ### Gameplay
 - Two-player local game (no AI). X always goes first each round.
@@ -120,7 +120,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Memory Cards (`/memory-cards/`)
+## Memory Cards (`/games/memory-cards/`)
 
 ### Gameplay
 - 4 × 4 grid, 16 cards = 8 pairs
@@ -149,7 +149,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## 2048 (`/2048/`)
+## 2048 (`/games/2048/`)
 
 ### Gameplay
 - Single-player sliding tile puzzle on a 4×4 grid
@@ -172,7 +172,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Wordle (`/wordle/`)
+## Wordle (`/games/wordle/`)
 
 ### Gameplay
 - Single-player word guessing: 5-letter secret word, 6 tries
@@ -194,7 +194,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Breakout (`/breakout/`)
+## Breakout (`/games/breakout/`)
 
 ### Gameplay
 - Single-player arcade: bounce ball off paddle to destroy 7×5 brick grid
@@ -211,7 +211,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 | Space | Start / pause / resume |
 
 ### HUD
-- Score, Best (`"breakoutBest"`), Lives (❤ icons), Level — absolute bar above canvas
+- Score, Best (`"breakoutBest"`), Lives (❤ icons), Level — HUD bar sits between the nav and canvas
 
 ### Visual feedback
 - Ball: white circle with cyan glow; Paddle: gradient blue rounded rect
@@ -220,7 +220,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Minesweeper (`/minesweeper/`)
+## Minesweeper (`/games/minesweeper/`)
 
 ### Gameplay
 - Single-player logic: reveal all non-mine cells without hitting a mine
@@ -246,7 +246,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Flappy Bird (`/flappy-bird/`)
+## Flappy Bird (`/games/flappy-bird/`)
 
 ### Gameplay
 - Single-player endless arcade: flap through infinite pipe gauntlet
@@ -270,7 +270,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Tetris (`/tetris/`)
+## Tetris (`/games/tetris/`)
 
 ### Gameplay
 - Classic single-player: clear horizontal lines by filling a 10×20 grid with falling tetrominoes
@@ -311,7 +311,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Pong (`/pong/`)
+## Pong (`/games/pong/`)
 
 ### Gameplay
 - Single-player vs AI canvas game; player controls the left paddle with the mouse/touch
@@ -339,7 +339,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Connect Four (`/connect-four/`)
+## Connect Four (`/games/connect-four/`)
 
 ### Gameplay
 - Two-player (local alternating turns) on a 7×6 grid
@@ -362,7 +362,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Whack-a-Mole (`/whack-a-mole/`)
+## Whack-a-Mole (`/games/whack-a-mole/`)
 
 ### Gameplay
 - 30-second countdown; moles pop up in random holes in a 3×3 grid
@@ -391,7 +391,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Simon (`/simon/`)
+## Simon (`/games/simon/`)
 
 ### Gameplay
 - Single-player memory sequence game with four coloured quadrant buttons
@@ -419,7 +419,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Hangman (`/hangman/`)
+## Hangman (`/games/hangman/`)
 
 ### Gameplay
 - Guess the hidden word one letter at a time; six wrong guesses trigger a full gallows
@@ -447,7 +447,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Asteroids (`/asteroids/`)
+## Asteroids (`/games/asteroids/`)
 
 ### Gameplay
 - Retro vector-style arcade: navigate a ship through waves of asteroids
@@ -485,7 +485,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Sudoku (`/sudoku/`)
+## Sudoku (`/games/sudoku/`)
 
 ### Gameplay
 - Fill the 9×9 grid so every row, column, and 3×3 box contains digits 1–9
@@ -520,7 +520,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Dino Run (`/dino-run/`)
+## Dino Run (`/games/dino-run/`)
 
 ### Gameplay
 - Endless runner: control a pixel-art dinosaur dodging cacti and pterodactyls
@@ -552,7 +552,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Bubble Shooter (`/bubble-shooter/`)
+## Bubble Shooter (`/games/bubble-shooter/`)
 
 ### Gameplay
 - Aim and fire coloured bubbles from the bottom-centre to pop clusters of 3+ same-colour bubbles
@@ -593,7 +593,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Alien Invaders (`/alien-invaders/`)
+## Alien Invaders (`/games/alien-invaders/`)
 
 ### Gameplay
 - Control a laser cannon at the bottom of the screen and destroy descending alien waves
@@ -648,7 +648,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Tower Defense (`/tower-defense/`)
+## Tower Defense (`/games/tower-defense/`)
 
 ### Gameplay
 - Build towers beside a winding path and stop enemies before they reach the base
@@ -702,7 +702,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Solitaire (`/solitaire/`)
+## Solitaire (`/games/solitaire/`)
 
 ### Gameplay
 - Play a clean Klondike solitaire board with a standard 52-card deck
@@ -757,7 +757,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Sliding Puzzle (`/sliding-puzzle/`)
+## Sliding Puzzle (`/games/sliding-puzzle/`)
 
 ### Gameplay
 - Slide numbered tiles into ascending order with the empty space in the final cell
@@ -806,7 +806,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Road Hopper (`/road-hopper/`)
+## Road Hopper (`/games/road-hopper/`)
 
 ### Gameplay
 - Hop from the bottom of the board to the safe goal spaces at the top
@@ -858,7 +858,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Reversi (`/reversi/`)
+## Reversi (`/games/reversi/`)
 
 ### Gameplay
 - Play a polished local Reversi / Othello-style strategy board
@@ -913,7 +913,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Maze Chase (`/maze-chase/`)
+## Maze Chase (`/games/maze-chase/`)
 
 ### Gameplay
 - Navigate a neon maze, collect every small orb, and avoid roaming enemy chasers
@@ -959,7 +959,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Lights Out (`/lights-out/`)
+## Lights Out (`/games/lights-out/`)
 
 ### Gameplay
 - Toggle glowing tiles until every light on the board is off
@@ -1006,7 +1006,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Checkers (`/checkers/`)
+## Checkers (`/games/checkers/`)
 
 ### Gameplay
 - Local two-player checkers game with red and blue pieces
@@ -1057,7 +1057,7 @@ Overlay has blur backdrop, dark tint, and game's final score in subtitle.
 
 ---
 
-## Battleship (`/battleship/`)
+## Battleship (`/games/battleship/`)
 
 ### Gameplay
 - Place your fleet on a 10×10 board, then fire at the enemy 10×10 grid

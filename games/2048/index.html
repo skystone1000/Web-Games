@@ -48,7 +48,7 @@
 			flex: 1;
 			position: relative;
 			z-index: 1;
-			overflow-y: auto;
+			overflow: hidden;
 			display: grid;
 			align-items: start;
 			justify-items: center;
@@ -288,6 +288,17 @@
 
 		/* ── Responsive ── */
 		@media (max-width: 860px) {
+			body { overflow-y: auto; }
+
+			.game-viewport {
+				height: auto;
+				min-height: 100svh;
+			}
+
+			.game-area {
+				overflow-y: auto;
+			}
+
 			.game-shell {
 				grid-template-columns: 1fr;
 				align-items: start;

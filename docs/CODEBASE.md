@@ -11,10 +11,10 @@ Key elements:
 - `.game-grid` — CSS grid of `.game-card` articles
 - `.game-card.coming` — dimmed (opacity 0.65) for placeholder cards
 
-Asset references (root-relative):
+Asset references (root-absolute):
 ```html
-<link rel="stylesheet" href="./assets/css/games.css" />
-<script src="./assets/js/games.js"></script>
+<link rel="stylesheet" href="/assets/css/games.css" />
+<script src="/assets/js/games.js"></script>
 ```
 
 ---
@@ -60,7 +60,7 @@ DOMContentLoaded
 
 ---
 
-### `snake/index.html` — Snake Game
+### `games/snake/index.html` — Snake Game
 Self-contained. All styles in `<style>`, all logic in `<script>`.
 
 Game state machine:
@@ -105,8 +105,8 @@ CSS overrides in game's `<style>`:
 
 ## Patterns to Follow When Adding a New Game
 
-1. Create `[game-name]/index.html`
-2. Copy the head boilerplate from `snake/index.html` (fonts, games.css link)
+1. Create `/games/[game-name]/index.html`
+2. Copy the head boilerplate from `/games/snake/index.html` (fonts, games.css link)
 3. Add `<div id="header-placeholder">` at top of body
 4. Wrap game UI in `<div class="game-viewport">` (override flex direction as needed)
 5. Override `nav` in `<style>` to force glass background
@@ -116,8 +116,8 @@ CSS overrides in game's `<style>`:
 
 ---
 
-### `2048/index.html` — 2048 Puzzle
-Self-contained. Layout B (two-column panels). No scroll.
+### `games/2048/index.html` — 2048 Puzzle
+ Self-contained. Layout B (two-column panels). No scroll.
 
 Key variables: `board` (4×4 number matrix), `score`, `best` (localStorage `"2048Best"`), `moves`.
 
@@ -132,7 +132,7 @@ Tiles are `position:absolute` divs moved via CSS `transform:translate()` with `t
 
 ---
 
-### `wordle/index.html` — Wordle Word Game
+### `games/wordle/index.html` — Wordle Word Game
 Self-contained. Layout B (two-column panels). Scroll below 700px.
 
 Key variables: `secret` (uppercase 5-letter word), `currentRow` (0–5), `currentGuess` (letter array), `stats` object, `ANSWERS` array, `VALID_WORDS` Set.
@@ -146,8 +146,8 @@ Key functions:
 
 ---
 
-### `breakout/index.html` — Breakout Arcade
-Self-contained. Layout A (fullscreen canvas). HUD is an absolute `<div>` above canvas.
+### `games/breakout/index.html` — Breakout Arcade
+Self-contained. Layout A (fullscreen canvas). HUD is a flex item stacked between the nav offset and the canvas.
 
 State machine: `idle | running | paused | dead`.
 
@@ -161,7 +161,7 @@ Key functions:
 
 ---
 
-### `minesweeper/index.html` — Minesweeper
+### `games/minesweeper/index.html` — Minesweeper
 Self-contained. Layout B (two-column panels). Scroll below 768px.
 
 Key variables: `grid[][]` (`{mine,revealed,flagged,adjacent}`), `diff` string, `firstClick` bool, `DIFFICULTIES` config object.
@@ -177,7 +177,7 @@ Context menu suppressed on grid (`contextmenu` → `e.preventDefault()`).
 
 ---
 
-### `flappy-bird/index.html` — Flappy Bird
+### `games/flappy-bird/index.html` — Flappy Bird
 Self-contained. Layout A (fullscreen canvas).
 
 State machine: `idle | running | dead`.
@@ -194,7 +194,7 @@ Key functions:
 
 ---
 
-### `tetris/index.html` — Tetris
+### `games/tetris/index.html` — Tetris
 Self-contained. Layout B (two-column panels). Left panel: 10×20 CSS grid canvas. Right sidebar: stats + next piece preview.
 
 State machine: `idle | running | paused | dead`.
@@ -213,7 +213,7 @@ Key functions:
 
 ---
 
-### `pong/index.html` — Pong
+### `games/pong/index.html` — Pong
 Self-contained. Layout A (fullscreen canvas).
 
 State machine: `idle | running | dead`.
@@ -230,7 +230,7 @@ Key functions:
 
 ---
 
-### `connect-four/index.html` — Connect Four
+### `games/connect-four/index.html` — Connect Four
 Self-contained. Layout B (two-column panels). Left panel: 7×6 CSS grid board. Right sidebar: turn indicator + scores.
 
 State machine: `idle | running | won`.
@@ -246,7 +246,7 @@ Key functions:
 
 ---
 
-### `whack-a-mole/index.html` — Whack-a-Mole
+### `games/whack-a-mole/index.html` — Whack-a-Mole
 Self-contained. Layout C (centered board). 3×3 mole hole grid.
 
 State machine: `idle | running | dead`.
@@ -263,7 +263,7 @@ Key functions:
 
 ---
 
-### `simon/index.html` — Simon
+### `games/simon/index.html` — Simon
 Self-contained. Layout C (centered board). 2×2 CSS grid quadrant buttons.
 
 State machine: `idle | showing | input | dead`.
@@ -280,7 +280,7 @@ Key functions:
 
 ---
 
-### `hangman/index.html` — Hangman
+### `games/hangman/index.html` — Hangman
 Self-contained. Layout C (centered board). Inline SVG gallows + letter button grid.
 
 State machine: `idle | running | won | dead`.
@@ -299,7 +299,7 @@ SVG gallows parts drawn in order: gallows frame (3 paths) → head circle → to
 
 ---
 
-### `asteroids/index.html` — Asteroids
+### `games/asteroids/index.html` — Asteroids
 Self-contained. Layout A (fullscreen canvas).
 
 State machine: `idle | running | dead`.
@@ -318,7 +318,7 @@ Key functions:
 
 ---
 
-### `sudoku/index.html` — Sudoku
+### `games/sudoku/index.html` — Sudoku
 Self-contained. Layout B (two-column panels). Left panel: 9×9 CSS grid board. Right sidebar: difficulty selector + timer + stats + number pad.
 
 State machine: `idle | running | won`.
@@ -337,7 +337,7 @@ Key functions:
 
 ---
 
-### `dino-run/index.html` — Dino Run
+### `games/dino-run/index.html` — Dino Run
 Self-contained. Layout A (fullscreen canvas).
 
 State machine: `idle | running | dead`.
@@ -356,7 +356,7 @@ Key functions:
 
 ---
 
-### `bubble-shooter/index.html` — Bubble Shooter
+### `games/bubble-shooter/index.html` — Bubble Shooter
 Self-contained. Layout A (fullscreen canvas).
 
 State machine: `idle | aiming | firing | popping | dead`.
@@ -377,7 +377,7 @@ Key functions:
 
 ---
 
-### `alien-invaders/index.html` — Alien Invaders
+### `games/alien-invaders/index.html` — Alien Invaders
 Self-contained. Layout A (fullscreen canvas).
 
 State machine: `idle | running | paused | dead`.
@@ -443,7 +443,7 @@ Event bindings:
 
 ---
 
-### `tower-defense/index.html` — Tower Defense
+### `games/tower-defense/index.html` — Tower Defense
 Self-contained. Layout B (two-column panels: canvas/path left, tower shop sidebar right).
 
 State machine: `idle | running | paused | dead | won`.
@@ -526,7 +526,7 @@ Event bindings:
 
 ---
 
-### `solitaire/index.html` — Solitaire
+### `games/solitaire/index.html` — Solitaire
 Self-contained. Layout B (two-column panels: card table left, stats/rules sidebar right).
 
 State machine: `idle | running | paused | won`.
@@ -597,7 +597,7 @@ Event bindings:
 
 ---
 
-### `sliding-puzzle/index.html` — Sliding Puzzle
+### `games/sliding-puzzle/index.html` — Sliding Puzzle
 Self-contained. Layout C (centered fixed-aspect board with flanking info/control panels).
 
 State machine: `idle | running | won`.
@@ -645,7 +645,7 @@ Event bindings:
 ```md id="r7lc59"
 ---
 
-### `road-hopper/index.html` — Road Hopper
+### `games/road-hopper/index.html` — Road Hopper
 Self-contained. Layout A (fullscreen canvas).
 
 State machine: `idle | running | paused | dead | won`.
@@ -719,7 +719,7 @@ Event bindings:
 
 ---
 
-### `reversi/index.html` — Reversi
+### `games/reversi/index.html` — Reversi
 Self-contained. Layout B (two-column panels: main board left, sidebar right).
 
 State machine: `running | ended`.
@@ -775,7 +775,7 @@ Event bindings:
 
 ---
 
-### `maze-chase/index.html` — Maze Chase
+### `games/maze-chase/index.html` — Maze Chase
 Self-contained. Layout A (fullscreen canvas).
 
 State machine: `idle | running | paused | caught | dead | won`.
@@ -803,7 +803,7 @@ Key functions:
 
 ---
 
-### `lights-out/index.html` — Lights Out
+### `games/lights-out/index.html` — Lights Out
 Self-contained. Layout C (centered board with flanking info panels).
 
 State machine: implicit puzzle state using `solved` boolean.
@@ -825,7 +825,7 @@ Key functions:
 
 ---
 
-### `checkers/index.html` — Checkers
+### `games/checkers/index.html` — Checkers
 Self-contained. Layout B (two-column board + sidebar).
 
 State machine: implicit turn-based state using `gameOver`, `turn`, `selected`, and `chainLock`.
@@ -852,7 +852,7 @@ Key functions:
 
 ---
 
-### `battleship/index.html` — Battleship
+### `games/battleship/index.html` — Battleship
 Self-contained. Layout B (two grids/main panel + sidebar).
 
 State machine: `placing | player | enemy | victory | defeat`.
