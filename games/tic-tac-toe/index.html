@@ -48,20 +48,17 @@
             flex: 1;
             position: relative;
             z-index: 1;
-            display: grid;
-            align-items: stretch;
-            justify-items: center;
-            padding: 2rem 6vw;
             min-height: 0;
+            overflow: hidden;
         }
 
         .game-shell {
-            width: 100%;
-            max-width: 1080px;
+            position: absolute;
+            inset: 1.25rem 1.5rem;
             display: grid;
-            grid-template-columns: 1fr 390px;
-            gap: 2rem;
-            align-items: stretch;
+            grid-template-columns: 70fr 30fr;
+            grid-template-rows: minmax(0, 1fr);
+            gap: 1.5rem;
         }
 
         .panel {
@@ -70,10 +67,11 @@
             border-radius: var(--r);
             box-shadow: var(--shadow);
             overflow: hidden;
+            min-height: 0;
         }
 
         .hero-panel {
-            padding: 2rem;
+            padding: 1.25rem;
             container-type: size;
         }
 
@@ -214,7 +212,10 @@
 
         /* ── Sidebar ── */
         .side {
+            height: 100%;
             padding: 1.5rem;
+            overflow-y: auto;
+            box-sizing: border-box;
         }
 
         .side h2 {
@@ -281,19 +282,26 @@
 
             .game-area {
                 overflow-y: visible;
+                padding: 1.25rem 1rem;
             }
 
             .game-shell {
+                position: static;
+                inset: auto;
                 grid-template-columns: 1fr;
-                align-items: start;
+                grid-template-rows: auto;
+                gap: 1.25rem;
             }
 
             .side {
                 order: 2;
+                height: auto;
+                overflow-y: visible;
             }
 
             .hero-panel {
                 container-type: normal;
+                padding: 1.25rem;
             }
 
             .board {

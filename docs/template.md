@@ -10,11 +10,11 @@ You are adding a new browser game to a pure-static games site (`games.adityamaha
 
 **Repo structure:**
 ```
-/index.html                  → hub page (game card grid)
-/includes/header.html        → shared nav fragment (fetched at runtime)
-/assets/css/games.css        → shared styles + design tokens
-/assets/js/games.js          → header inject + hamburger + scroll reveal
-/[game-name]/index.html      → each game is a self-contained file
+/index.html                     → hub page (game card grid)
+/includes/header.html           → shared nav fragment (fetched at runtime)
+/assets/css/games.css           → shared styles + design tokens
+/assets/js/games.js             → header inject + hamburger + scroll reveal
+/games/[game-name]/index.html   → each game is a self-contained file
 ```
 
 ---
@@ -189,12 +189,102 @@ All game CSS goes in a `<style>` block in `<head>`. All game logic goes in a `<s
 <div style="display:inline-flex;align-items:center;padding:6px 12px;border-radius:50px;background:var(--accent-dim);border:1px solid rgba(0,229,255,0.22);color:var(--accent);font-size:0.78rem;font-weight:800">Ready</div>
 ```
 
-### Panels and layout conventions
+### Two-column layout (Layout Type B)
 
-- A game's main content area typically uses a **two-column grid** (`grid-template-columns: 1fr [sidebar]px`) at desktop, collapsing to single column at a mobile breakpoint.
-- The left/main panel holds the primary game area (canvas, board, cards).
-- The right/sidebar panel holds: section label, h1, description, stat counters, action buttons, and rules list.
-- Sidebar items order: badge → h1 → description → stats → status indicator → rules → action buttons → history (if applicable).
+The canonical two-column panel layout uses `.game-area` → `.game-shell` → two `.panel` children. The CSS below is **required exactly as written** — deviations cause layout collapse on mid-range screen widths (~900–1200 px) where `height: 100%` on flex children and plain `1fr` grid rows silently fail.
+
+**Column split:** `70fr 30fr` — game / board left, info / sidebar right.
+
+```css
+/* ── Layout ── */
+.game-viewport {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding-top: 66px;          /* nav height */
+}
+
+.game-area {
+    flex: 1;
+    position: relative;         /* containing block for .game-shell */
+    z-index: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.game-shell {
+    position: absolute;
+    inset: 1.25rem 1.5rem;      /* controls the gap from viewport edges */
+    display: grid;
+    grid-template-columns: 70fr 30fr;
+    grid-template-rows: minmax(0, 1fr);   /* NOT plain 1fr — see rules below */
+    gap: 1.5rem;
+}
+
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    min-height: 0;              /* prevents grid cells expanding past row bounds */
+}
+
+/* Game panel — holds the board / canvas */
+.hero-panel {
+    padding: 1.25rem;
+    container-type: size;       /* enables cqw / cqh for square-board sizing */
+}
+
+/* Square board inside .hero-panel */
+.board {
+    width: min(100cqw, 100cqh); /* fills the smaller container dimension */
+}
+
+/* Info / sidebar panel */
+.side {
+    height: 100%;
+    padding: 1.5rem;
+    overflow-y: auto;           /* scrolls internally on short screens */
+    box-sizing: border-box;
+}
+```
+
+**Three rules that must never be broken:**
+
+1. **`position: absolute; inset:` on `.game-shell`** — `height: 100%` on a flex item whose height comes through flex layout doesn't resolve reliably across browsers. Absolute positioning with `inset` gives the grid a definite computed size with no ambiguity.
+
+2. **`grid-template-rows: minmax(0, 1fr)`, never plain `1fr`** — plain `1fr` distributes *free* space but still respects the track's `auto` minimum (the sidebar's content height). When sidebar content is taller than the available viewport on a short screen, the row expands and both panels overflow. `minmax(0, 1fr)` sets the minimum to 0, allowing the row to shrink to exactly the grid container's height.
+
+3. **`min-height: 0` on `.panel`** — grid items default to `min-height: auto`, meaning they can push past their cell bounds. This override is required on every panel.
+
+**Mobile breakpoint (≤900 px) — must undo all three:**
+
+```css
+@media (max-width: 900px) {
+    body { overflow-y: auto; }
+
+    .game-viewport { height: auto; min-height: 100svh; }
+
+    .game-area { overflow-y: visible; padding: 1.25rem 1rem; }
+
+    .game-shell {
+        position: static;
+        inset: auto;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        gap: 1.25rem;
+    }
+
+    .side { height: auto; overflow-y: visible; }
+
+    .hero-panel { container-type: normal; }
+
+    .board { width: 100%; }
+}
+```
+
+**Sidebar content order:** badge/label → h1 → description → stats → status indicator → rules → action buttons → history (if applicable).
 
 ### Typography rules
 
@@ -334,7 +424,8 @@ SHORT_HUB_DESC:   [1–2 sentences for the hub card. Focus on what makes it fun.
 
 LAYOUT_TYPE:      [Choose one]
                   A — Fullscreen canvas  (snake-like: canvas fills remaining viewport, overlay for start/pause/end)
-                  B — Two-column panels  (tic-tac-toe-like: main panel left, sidebar right, collapse on mobile)
+                  B — Two-column panels  (tic-tac-toe-like: 70fr game left / 30fr sidebar right, collapse on mobile)
+                       → follow the "Two-column layout" CSS blueprint in Standards exactly — do not improvise
                   C — Centered board     (memory-cards-like: fixed-aspect board centered in viewport with flanking info)
 
 MOBILE_SCROLL:    [yes / no — does this layout need scroll on small screens?]

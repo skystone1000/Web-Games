@@ -50,6 +50,16 @@ Header has NO inline scripts. All behaviour wired by `games.js` after inject.
 - All game logic in `<script>` at bottom of same file
 - Touch swipe support for mobile
 
+#### Layout patterns (three types)
+
+| Type | Used by | Structure |
+|------|---------|-----------|
+| A — Fullscreen canvas | Snake, Maze Chase | canvas fills viewport; start/pause/end handled by an overlay |
+| B — Two-column panels | Tic Tac Toe, Checkers | `70fr` game panel left · `30fr` sidebar right · collapses ≤900 px |
+| C — Centered board | Memory Cards, Lights Out | fixed-aspect board centred; flanking info inline or stacked |
+
+**Type B is the most complex** and has precise CSS requirements to avoid height-resolution failures on mid-range screens. Always copy the blueprint from `docs/template.md` → "Two-column layout (Layout Type B)" rather than writing it from scratch. Key constraints: shell uses `position: absolute; inset:` (not `height: 100%`), row track uses `minmax(0, 1fr)` (not plain `1fr`), every `.panel` needs `min-height: 0`.
+
 ## Cross-Repo Links
 Links back to the portfolio use **absolute hardcoded URLs**:
 ```
