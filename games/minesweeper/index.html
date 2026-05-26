@@ -58,20 +58,17 @@
             flex: 1;
             position: relative;
             z-index: 1;
-            overflow-y: auto;
-            padding: 2rem 6vw;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .game-shell {
-            width: 100%;
-            max-width: 1140px;
+            position: absolute;
+            inset: 1.25rem 1.5rem;
             display: grid;
-            grid-template-columns: 1fr 340px;
-            gap: 2rem;
-            align-items: start;
+            grid-template-columns: 70fr 30fr;
+            grid-template-rows: minmax(0, 1fr);
+            gap: 1.5rem;
         }
 
         .panel {
@@ -80,10 +77,14 @@
             border-radius: var(--r);
             box-shadow: var(--shadow);
             overflow: hidden;
+            min-height: 0;
         }
 
         .left-panel {
             padding: 1.5rem;
+            height: 100%;
+            overflow-y: auto;
+            box-sizing: border-box;
         }
 
         /* ── Difficulty pills ── */
@@ -208,6 +209,9 @@
         /* ── Sidebar ── */
         .side {
             padding: 1.5rem;
+            height: 100%;
+            overflow-y: auto;
+            box-sizing: border-box;
         }
 
         h1 {
@@ -369,12 +373,23 @@
 
         /* ── Responsive ── */
         @media (max-width: 900px) {
+            .game-area {
+                overflow-y: visible;
+                padding: 1.25rem 1rem;
+            }
+
             .game-shell {
+                position: static;
+                inset: auto;
                 grid-template-columns: 1fr;
+                grid-template-rows: auto;
+                gap: 1.25rem;
             }
 
             .side {
                 order: -1;
+                height: auto;
+                overflow-y: visible;
             }
         }
 

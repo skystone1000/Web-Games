@@ -57,7 +57,8 @@
             width: min(1260px, 100%);
             height: 100%;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 330px;
+            grid-template-columns: 70fr 30fr;
+            grid-template-rows: minmax(0, 1fr);
             gap: 1.25rem;
             position: relative;
             z-index: 1;
@@ -77,6 +78,7 @@
             padding: clamp(0.7rem, 1.6vw, 1.15rem);
             touch-action: none;
             min-width: 0;
+            min-height: 0;
         }
 
         .side-panel {
@@ -423,10 +425,6 @@
         }
 
         @media (max-width: 1100px) {
-            .solitaire-shell {
-                grid-template-columns: minmax(0, 1fr) 300px;
-            }
-
             .side-panel {
                 padding: 1rem;
             }
@@ -449,6 +447,7 @@
             .solitaire-shell {
                 height: auto;
                 grid-template-columns: 1fr;
+                grid-template-rows: auto;
             }
 
             .table-panel {

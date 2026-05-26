@@ -54,10 +54,11 @@
         }
 
         .puzzle-shell {
-            width: min(1180px, 100%);
+            width: 100%;
             height: 100%;
             display: grid;
-            grid-template-columns: minmax(210px, 255px) minmax(360px, 1fr) minmax(245px, 285px);
+            grid-template-columns: 20fr 60fr 20fr;
+            grid-template-rows: minmax(0, 1fr);
             gap: clamp(14px, 2vw, 22px);
             align-items: stretch;
         }
@@ -70,6 +71,7 @@
             box-shadow: var(--shadow);
             overflow: hidden;
             position: relative;
+            min-height: 0;
         }
 
         .game-panel::before,
@@ -87,6 +89,7 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            overflow-y: auto;
         }
 
         .side-panel>*,
@@ -101,6 +104,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            container-type: size;
         }
 
         h1.game-title {
@@ -215,7 +219,7 @@
         }
 
         .board-wrap {
-            width: min(100%, 68vh, 620px);
+            width: min(100cqw, 100cqh);
             aspect-ratio: 1 / 1;
             position: relative;
             border-radius: clamp(16px, 2.5vw, 24px);
@@ -400,70 +404,62 @@
         }
 
         @media (max-width: 1080px) {
-            .puzzle-shell {
-                grid-template-columns: minmax(330px, 1fr) minmax(265px, 320px);
-                grid-template-areas:
-                    "board info"
-                    "board controls";
-            }
-
-            .game-panel {
-                grid-area: board;
-            }
-
-            .info-panel {
-                grid-area: info;
-            }
-
-            .controls-panel {
-                grid-area: controls;
-            }
-
-            .board-wrap {
-                width: min(100%, 60vh, 560px);
-            }
-        }
-
-        @media (max-width: 760px) {
-
-            html,
-            body {
+            html:has(.game-viewport),
+            body:has(.game-viewport) {
                 height: auto;
                 overflow-x: hidden;
-            }
-
-            body {
                 overflow-y: auto;
             }
 
             .game-viewport {
                 height: auto;
                 min-height: 100svh;
+                max-height: none;
                 overflow: visible;
-                padding: 86px 14px 24px;
+                padding: 86px clamp(14px, 3vw, 24px) 28px;
+                align-items: flex-start;
+                justify-content: flex-start;
+                flex-direction: column;
             }
 
             .puzzle-shell {
+                width: 100%;
                 height: auto;
                 display: flex;
                 flex-direction: column;
-                gap: 14px;
+                gap: clamp(12px, 2vw, 18px);
             }
 
             .info-panel {
                 order: 1;
+                width: 100%;
             }
 
             .game-panel {
                 order: 2;
+                width: 100%;
+                container-type: normal;
+                overflow: visible;
             }
 
             .controls-panel {
                 order: 3;
+                width: 100%;
             }
 
             .side-panel {
-                padding: 16px;
+                height: auto;
+                overflow: visible;
+            }
+
+            .board-wrap {
+                width: min(100%, 72vw);
+            }
+        }
+
+        @media (max-width: 760px) {
+            .game-viewport {
+                padding: 86px 14px 24px;
             }
 
             .stats-grid {
@@ -483,7 +479,8 @@
             }
 
             .board-wrap {
-                width: min(100%, 92vw);
+                width: min(100%, 88vw);
+                margin: 0 auto;
             }
         }
 

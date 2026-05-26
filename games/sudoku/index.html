@@ -41,12 +41,6 @@
                 radial-gradient(ellipse 45% 45% at 15% 85%, rgba(0,229,255,0.08) 0%, transparent 60%);
         }
 
-        /* Mobile scroll */
-        @media (max-width: 700px) {
-            body { overflow-y: auto; }
-            .game-viewport { height: auto; min-height: 100svh; }
-        }
-
         /* ── Layout ── */
         .game-viewport {
             flex-direction: column;
@@ -57,22 +51,20 @@
 
         .inner {
             flex: 1;
+            height: calc(100dvh - 66px);
             position: relative;
             z-index: 1;
+            min-height: 0;
             overflow: hidden;
-            padding: 2rem 6vw;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
         }
 
         .game-shell {
-            width: 100%;
-            max-width: 1080px;
+            position: absolute;
+            inset: 1.25rem 1.5rem;
             display: grid;
-            grid-template-columns: 1fr 320px;
-            gap: 2rem;
-            align-items: start;
+            grid-template-columns: 70fr 30fr;
+            grid-template-rows: minmax(0, 1fr);
+            gap: 1.5rem;
         }
 
         .panel {
@@ -81,10 +73,14 @@
             border-radius: var(--r);
             box-shadow: var(--shadow);
             overflow: hidden;
+            min-height: 0;
         }
 
         .left-panel {
             padding: 1.5rem;
+            height: 100%;
+            overflow-y: auto;
+            box-sizing: border-box;
         }
 
         /* ── Difficulty pills ── */
@@ -253,6 +249,9 @@
         /* ── Sidebar ── */
         .side {
             padding: 1.5rem;
+            height: 100%;
+            overflow-y: auto;
+            box-sizing: border-box;
         }
 
         h1 {
@@ -393,8 +392,12 @@
 
         /* ── Responsive ── */
         @media (max-width: 900px) {
-            .game-shell { grid-template-columns: 1fr; }
-            .side { order: -1; }
+            body { overflow-y: auto; }
+            .game-viewport { height: auto; min-height: 100svh; }
+            .inner { height: auto; overflow-y: visible; padding: 1.25rem 1rem; }
+            .game-shell { position: static; inset: auto; grid-template-columns: 1fr; grid-template-rows: auto; gap: 1.25rem; }
+            .left-panel { height: auto; overflow-y: visible; }
+            .side { order: -1; height: auto; overflow-y: visible; }
         }
 
         @media (max-width: 560px) {

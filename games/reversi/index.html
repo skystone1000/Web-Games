@@ -57,7 +57,8 @@
         .reversi-shell {
             width: min(1180px, 100%);
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 360px;
+            grid-template-columns: 70fr 30fr;
+            grid-template-rows: minmax(0, 1fr);
             gap: 1rem;
             min-height: 0;
         }
@@ -272,6 +273,7 @@
         .side-panel {
             padding: 1.35rem;
             overflow-y: auto;
+            min-height: 0;
         }
 
         .side-panel h1 {
@@ -520,6 +522,7 @@
 
             .reversi-shell {
                 grid-template-columns: 1fr;
+                grid-template-rows: auto;
             }
 
             .board-panel {
