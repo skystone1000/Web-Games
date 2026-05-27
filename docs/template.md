@@ -121,14 +121,19 @@ All game CSS goes in a `<style>` block in `<head>`. All game logic goes in a `<s
    ```
 3. **`.game-viewport` base** (from `games.css`) is `display:flex; align-items:center; justify-content:center; width:100vw; height:100dvh; overflow:hidden; background:var(--bg)`. Override `flex-direction`, `align-items`, `padding-top` as needed for your layout.
 4. **Account for the nav** (height 66px). If your game uses a column layout, add `padding-top: 66px` to `.game-viewport`.
-5. **Mobile scroll exception**: If the game has a sidebar or panel layout that genuinely can't fit a small screen, allow scroll at a specific breakpoint only:
+5. **Mobile scroll exception**: If the game has a sidebar or panel layout that genuinely can't fit a small screen, allow scroll at a specific breakpoint only. **Critical specificity rule**: `games.css` sets `html:has(.game-viewport), body:has(.game-viewport) { overflow: hidden }` with specificity (0-1-1). A plain `html, body` rule in a media query has (0-0-1) and **loses**. You must match the `:has(.game-viewport)` selector:
    ```css
    @media (max-width: [breakpoint]px) {
-       body { overflow-y: auto; }
-       .game-viewport { height: auto; min-height: 100svh; }
+       html:has(.game-viewport),
+       body:has(.game-viewport) {
+           height: auto;
+           overflow-x: hidden;
+           overflow-y: auto;
+       }
+       .game-viewport { height: auto; min-height: 100svh; max-height: none; }
    }
    ```
-   Do NOT allow scroll on the full-canvas game types (snake-like, etc.).
+   Do NOT allow scroll on full-canvas game types (snake-like, etc.).
 
 ### Header
 
@@ -286,6 +291,136 @@ The canonical two-column panel layout uses `.game-area` → `.game-shell` → tw
 
 **Sidebar content order:** badge/label → h1 → description → stats → status indicator → rules → action buttons → history (if applicable).
 
+---
+
+### Three-column layout (Layout Type D)
+
+Two flanking side panels (20% each) with a square-board game panel (60%) in the center. Desktop: no page scroll; side panels scroll internally. ≤1080 px: single column with page scroll.
+
+**Column split:** `20fr 60fr 20fr` — info left / board center / controls right.
+
+```css
+/* ── Base (desktop > 1080 px) ── */
+.game-viewport {
+    padding: 82px clamp(14px, 3vw, 34px) 18px;
+    align-items: stretch;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+}
+
+.game-shell {                              /* rename to match your game */
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 20fr 60fr 20fr;
+    grid-template-rows: minmax(0, 1fr);    /* MUST be minmax(0,1fr) — not plain 1fr */
+    gap: clamp(14px, 2vw, 22px);
+    align-items: stretch;
+}
+
+.game-panel,
+.side-panel {
+    background: rgba(17, 24, 39, 0.88);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    min-height: 0;                         /* required — grid items default to min-height: auto */
+}
+
+/* Side panels — scrollable on short desktop screens */
+.side-panel {
+    padding: clamp(16px, 2vw, 22px);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;                      /* mouse-wheel scrolls within panel on small laptops */
+}
+
+/* Center game panel — container query board sizing */
+.game-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    container-type: size;                  /* enables cqw / cqh for the board inside */
+    min-width: 0;
+    padding: clamp(14px, 2vw, 22px);
+}
+
+/* Square board fills whichever dimension is smaller */
+.board-wrap {
+    width: min(100cqw, 100cqh);
+    aspect-ratio: 1 / 1;
+}
+```
+
+**Four rules that must never be broken:**
+
+1. **`grid-template-rows: minmax(0, 1fr)`, never plain `1fr`** — without the `minmax(0,)`, the tallest side panel's content sets a minimum row height that causes panels to overflow on short screens.
+
+2. **`min-height: 0` on every panel** — grid items default to `min-height: auto` and push past their cell bounds without this.
+
+3. **`container-type: size` on the center panel** — enables `cqw`/`cqh` so the board fills the smaller of panel width or height. Side effect: the element cannot derive height from its children (its intrinsic size is 0), so it *must* have a definite height from the grid row — which it gets via rules 1 and 2. Reset to `container-type: normal` at mobile.
+
+4. **`overflow-y: auto` on side panels** — lets mouse-wheel scroll within each side panel on small-height laptop screens where the body itself does not scroll (desktop mode).
+
+**Tablet / Mobile breakpoint (≤1080 px) — single column with page scroll:**
+
+```css
+@media (max-width: 1080px) {
+    /* Override games.css specificity (0-1-1) — must use :has() selector */
+    html:has(.game-viewport),
+    body:has(.game-viewport) {
+        height: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .game-viewport {
+        height: auto;
+        min-height: 100svh;
+        max-height: none;                  /* removes games.css max-height: 100dvh cap */
+        overflow: visible;
+        padding: 86px clamp(14px, 3vw, 24px) 28px;
+        align-items: flex-start;           /* stops puzzle-shell from being forced to 100svh */
+        justify-content: flex-start;       /* pins content to top — prevents clipping above y=0 */
+        flex-direction: column;
+    }
+
+    .game-shell {
+        width: 100%;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        gap: clamp(12px, 2vw, 18px);
+    }
+
+    /* Stacking order: info → board → controls */
+    .info-panel   { order: 1; width: 100%; }
+    .game-panel   { order: 2; width: 100%; container-type: normal; overflow: visible; }
+    .controls-panel { order: 3; width: 100%; }
+
+    .side-panel   { height: auto; overflow: visible; }
+
+    .board-wrap   { width: min(100%, 72vw); }
+}
+
+@media (max-width: 760px) {
+    .game-viewport { padding: 86px 14px 24px; }
+    .board-wrap    { width: min(100%, 88vw); margin: 0 auto; }
+}
+
+@media (max-width: 430px) {
+    /* compact stats, any small-phone-specific overrides */
+}
+```
+
+**Why `align-items: flex-start` + `justify-content: flex-start` on `.game-viewport` at mobile:**
+`games.css` sets `align-items: center` on `.game-viewport`. Without these overrides, if the stacked shell is taller than 100 svh, it gets centred — pushing the top of the shell to a negative y position that is above the document origin and unreachable by scroll.
+
+**Naming convention:** Rename `.game-shell`, `.info-panel`, `.game-panel`, `.controls-panel` to match your game (e.g. `.lights-layout`, `.left-panel`, `.board-panel`, `.right-panel`). The CSS rules must target those actual class names in the HTML.
+
 ### Typography rules
 
 - `h1` inside game pages: override the hub size down to `clamp(2rem, 4vw, 3.2rem)`, `font-weight:800`, `letter-spacing:-1.5px`.
@@ -423,13 +558,17 @@ GENRE_TAG:        [e.g. "Puzzle" — shown as a tag on the hub card]
 SHORT_HUB_DESC:   [1–2 sentences for the hub card. Focus on what makes it fun.]
 
 LAYOUT_TYPE:      [Choose one]
-                  A — Fullscreen canvas  (snake-like: canvas fills remaining viewport, overlay for start/pause/end)
-                  B — Two-column panels  (tic-tac-toe-like: 70fr game left / 30fr sidebar right, collapse on mobile)
+                  A — Fullscreen canvas    (snake-like: canvas fills remaining viewport, overlay for start/pause/end)
+                  B — Two-column panels    (tic-tac-toe-like: 70fr game left / 30fr sidebar right, collapses ≤900 px)
                        → follow the "Two-column layout" CSS blueprint in Standards exactly — do not improvise
-                  C — Centered board     (memory-cards-like: fixed-aspect board centered in viewport with flanking info)
+                  C — Centered board       (memory-cards-like: fixed-aspect board centered in viewport with flanking info)
+                  D — Three-column panels  (sliding-puzzle-like: 20fr info left / 60fr board center / 20fr controls right,
+                                            collapses to single column with page scroll ≤1080 px)
+                       → follow the "Three-column layout" CSS blueprint in Standards exactly — do not improvise
 
 MOBILE_SCROLL:    [yes / no — does this layout need scroll on small screens?]
-                  If yes: state the breakpoint (e.g. "yes, below 900px")
+                  If yes: state the breakpoint (e.g. "yes, below 1080px")
+                  Layouts B and D always need mobile scroll — do not omit this.
 
 GAME_DESCRIPTION:
 [Full description of game mechanics. Include:

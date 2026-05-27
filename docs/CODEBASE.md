@@ -598,7 +598,7 @@ Event bindings:
 ---
 
 ### `games/sliding-puzzle/index.html` — Sliding Puzzle
-Self-contained. Layout C (centered fixed-aspect board with flanking info/control panels).
+Self-contained. Layout D (three-column panels: info left, board center, controls right). Collapses to single-column page-scroll layout at ≤1080 px.
 
 State machine: `idle | running | won`.
 
@@ -804,7 +804,7 @@ Key functions:
 ---
 
 ### `games/lights-out/index.html` — Lights Out
-Self-contained. Layout C (centered board with flanking info panels).
+Self-contained. Layout D (three-column panels: info left, board center, controls right). Collapses to single-column page-scroll layout at ≤1080 px.
 
 State machine: implicit puzzle state using `solved` boolean.
 

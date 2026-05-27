@@ -44,21 +44,42 @@ Header has NO inline scripts. All behaviour wired by `games.js` after inject.
 
 ### Game pages (`/games/[game]/index.html`)
 - Imports: `/assets/css/games.css`, `/assets/js/games.js`
-- **No scroll** — `body { overflow: hidden }`, `.game-viewport { height: 100vh }`
-- Nav glass forced via CSS override (scroll never fires since `body` is `overflow: hidden`)
+- **Desktop: no page scroll** — `body { overflow: hidden }`, `.game-viewport { height: 100dvh }`
+- **Mobile: page scrolls** for panel layouts (Layout B, D) at a breakpoint — body gets `overflow-y: auto`
+- Nav glass forced via CSS override (scroll never fires since `body` is `overflow: hidden` at desktop)
 - All game CSS in `<style>` in same file
 - All game logic in `<script>` at bottom of same file
 - Touch swipe support for mobile
 
-#### Layout patterns (three types)
+#### Layout patterns (four types)
 
 | Type | Used by | Structure |
 |------|---------|-----------|
-| A — Fullscreen canvas | Snake, Maze Chase | canvas fills viewport; start/pause/end handled by an overlay |
-| B — Two-column panels | Tic Tac Toe, Checkers | `70fr` game panel left · `30fr` sidebar right · collapses ≤900 px |
-| C — Centered board | Memory Cards, Lights Out | fixed-aspect board centred; flanking info inline or stacked |
+| A — Fullscreen canvas | Snake, Maze Chase, Flappy Bird | canvas fills viewport; start/pause/end handled by an overlay |
+| B — Two-column panels | Tic Tac Toe, Checkers, Wordle | `70fr` game panel left · `30fr` sidebar right · collapses to single column ≤900 px |
+| C — Centered board | Memory Cards, Whack-a-Mole | fixed-aspect board centred in viewport; flanking info inline or stacked |
+| D — Three-column panels | Sliding Puzzle, Lights Out | `20fr` info left · `60fr` game center · `20fr` controls right · collapses to single column ≤1080 px |
 
-**Type B is the most complex** and has precise CSS requirements to avoid height-resolution failures on mid-range screens. Always copy the blueprint from `docs/template.md` → "Two-column layout (Layout Type B)" rather than writing it from scratch. Key constraints: shell uses `position: absolute; inset:` (not `height: 100%`), row track uses `minmax(0, 1fr)` (not plain `1fr`), every `.panel` needs `min-height: 0`.
+**Type B** has precise CSS requirements — always copy the blueprint from `docs/template.md` → "Two-column layout (Layout Type B)". Key constraints: shell uses `position: absolute; inset:` (not `height: 100%`), row track uses `minmax(0, 1fr)` (not plain `1fr`), every `.panel` needs `min-height: 0`.
+
+**Type D** — the three-column layout — uses a direct grid shell with `height: 100%` (not absolute-positioned). Key constraints: `grid-template-rows: minmax(0, 1fr)` on the shell, `container-type: size` on the center panel so the board can use `width: min(100cqw, 100cqh)`, `overflow-y: auto` on side panels for desktop scroll on short screens, and `max-height: none` + `align-items: flex-start` + `justify-content: flex-start` on `.game-viewport` at the mobile breakpoint. Always copy the blueprint from `docs/template.md` → "Three-column layout (Layout Type D)".
+
+#### CSS specificity gotcha — mobile body scroll override
+`games.css` sets:
+```css
+html:has(.game-viewport), body:has(.game-viewport) { overflow: hidden }
+```
+This has specificity (0-1-1). A plain `html, body` rule in a media query has (0-0-1) and **loses** to it. To override, the media query rule must use the same `:has(.game-viewport)` selector:
+```css
+@media (max-width: 1080px) {
+    html:has(.game-viewport),
+    body:has(.game-viewport) {
+        height: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+}
+```
 
 ## Cross-Repo Links
 Links back to the portfolio use **absolute hardcoded URLs**:
