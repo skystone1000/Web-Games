@@ -310,7 +310,12 @@ body:has(.game-viewport) {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    overscroll-behavior: none;
+    /* `contain` (not `none`) — still blocks scroll-chaining so the page never
+       rubber-bands behind a fullscreen game, but does NOT interfere with
+       legitimate page-scroll when a game's mobile breakpoint flips
+       overflow-y from hidden to auto. `none` blocks too aggressively and
+       caused touchpad / touch-emulation scroll to stall on 2-col layouts. */
+    overscroll-behavior: contain;
 }
 
 .game-viewport {

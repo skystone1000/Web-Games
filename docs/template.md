@@ -267,11 +267,18 @@ The canonical two-column panel layout uses `.game-area` → `.game-shell` → tw
 
 ```css
 @media (max-width: 900px) {
-    body { overflow-y: auto; }
+    /* Override games.css :has() specificity (0-1-1) — must use the :has() selector */
+    html:has(.game-viewport),
+    body:has(.game-viewport) {
+        height: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: auto;  /* override games.css `contain` — needed so DevTools touch emulation can scroll */
+    }
 
-    .game-viewport { height: auto; min-height: 100svh; }
+    .game-viewport { height: auto; min-height: 100svh; max-height: none; overflow: visible; }
 
-    .game-area { overflow-y: visible; padding: 1.25rem 1rem; }
+    .game-area { position: static; overflow: visible; padding: 1.25rem 1rem; }
 
     .game-shell {
         position: static;
@@ -283,11 +290,17 @@ The canonical two-column panel layout uses `.game-area` → `.game-shell` → tw
 
     .side { height: auto; overflow-y: visible; }
 
-    .hero-panel { container-type: normal; }
+    .hero-panel { container-type: normal; }   /* if center panel uses container queries */
 
     .board { width: 100%; }
 }
 ```
+
+**Common pitfalls — avoid these:**
+
+- **DO NOT** duplicate `html, body { overflow: hidden; height: 100% }` in your game's inline `<style>` — `games.css` already locks the page via `html:has(.game-viewport), body:has(.game-viewport) { overflow: hidden }` at higher specificity. The duplicate plain-selector rule is redundant on desktop and adds cascade confusion when the mobile `:has()` override tries to flip `overflow-y` to `auto`.
+
+- **DO NOT** forget to reset `overscroll-behavior` on mobile. `games.css` sets `overscroll-behavior: contain` on `html`/`body` for game pages. On the mobile breakpoint where overflow becomes `auto`, `contain` is mostly fine — but Chrome DevTools touch-emulation occasionally stalls the first scroll gesture when overscroll-behavior is locked. Explicitly setting `overscroll-behavior: auto` in the mobile rule is the safest path.
 
 **Sidebar content order:** badge/label → h1 → description → stats → status indicator → rules → action buttons → history (if applicable).
 
@@ -369,12 +382,16 @@ Two flanking side panels (20% each) with a square-board game panel (60%) in the 
 
 ```css
 @media (max-width: 1080px) {
-    /* Override games.css specificity (0-1-1) — must use :has() selector */
+    /* Override games.css specificity (0-1-1) — must use :has() selector.
+       overscroll-behavior: auto required — games.css sets `contain` on html/body for
+       game pages, which can stall touchpad / DevTools touch-emulation scroll on this
+       breakpoint. Resetting to `auto` keeps page-scroll behaviour clean. */
     html:has(.game-viewport),
     body:has(.game-viewport) {
         height: auto;
         overflow-x: hidden;
         overflow-y: auto;
+        overscroll-behavior: auto;
     }
 
     .game-viewport {
@@ -418,6 +435,14 @@ Two flanking side panels (20% each) with a square-board game panel (60%) in the 
 
 **Why `align-items: flex-start` + `justify-content: flex-start` on `.game-viewport` at mobile:**
 `games.css` sets `align-items: center` on `.game-viewport`. Without these overrides, if the stacked shell is taller than 100 svh, it gets centred — pushing the top of the shell to a negative y position that is above the document origin and unreachable by scroll.
+
+**Common pitfalls — avoid these (same as Layout B):**
+
+- **DO NOT** duplicate `html, body { overflow: hidden; height: 100% }` in your game's inline `<style>`. `games.css` already locks the page via `html:has(.game-viewport), body:has(.game-viewport)` at higher specificity (0-1-1). The plain-selector duplicate (0-0-1) is redundant on desktop and adds cascade confusion on mobile.
+
+- **DO NOT** forget `overscroll-behavior: auto` in the mobile `:has()` override. `games.css` applies `overscroll-behavior: contain` to game pages; on the mobile breakpoint where overflow flips to `auto`, leaving `contain` in place can stall touchpad / DevTools touch-emulation scroll. Explicit `overscroll-behavior: auto` is required.
+
+- **DO NOT** use plain `body { overflow-y: auto }` (specificity 0-0-1) in the mobile breakpoint — it loses to the games.css `body:has(.game-viewport) { overflow: hidden }` rule (0-1-1) and the page stays locked. Always use the `:has()` selector to match games.css specificity.
 
 **Naming convention:** Rename `.game-shell`, `.info-panel`, `.game-panel`, `.controls-panel` to match your game (e.g. `.lights-layout`, `.left-panel`, `.board-panel`, `.right-panel`). The CSS rules must target those actual class names in the HTML.
 

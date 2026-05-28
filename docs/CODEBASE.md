@@ -97,7 +97,7 @@ Controls:
 - Touch: swipe for direction (min 20px), tap = start/pause
 
 CSS overrides in game's `<style>`:
-- `body { overflow: hidden }` — prevents scroll
+- `body { overflow: hidden }` — prevents scroll (fullscreen Layout A only; for Layout B/D the games.css `:has()` rule already locks the page and adding the plain rule is redundant + harmful at mobile breakpoints)
 - `nav { background: ... }` — always-on glass (no scroll trigger available)
 - `.game-viewport { flex-direction: column; padding-top: 66px }` — makes HUD + canvas layout work
 
@@ -110,9 +110,39 @@ CSS overrides in game's `<style>`:
 3. Add `<div id="header-placeholder">` at top of body
 4. Wrap game UI in `<div class="game-viewport">` (override flex direction as needed)
 5. Override `nav` in `<style>` to force glass background
-6. Add `body { overflow: hidden }` in `<style>`
+6. Add `body { overflow: hidden }` in `<style>` **only for Layout A (fullscreen canvas) games** — Layout B/D games should rely on the games.css `:has(.game-viewport)` lock and avoid the duplicate plain rule
 7. Load `/assets/js/games.js` before game script
 8. Add `<article class="game-card">` to `index.html` game grid
+
+### Layout B / Layout D mobile page-scroll — REQUIRED pattern
+
+Every 2-column (B) and 3-column (D) game must include this exact block in its mobile breakpoint. Omitting `overscroll-behavior: auto` will silently break touchpad scrolling in Chrome DevTools device emulation (the most common test environment):
+
+```css
+@media (max-width: <YOUR_BREAKPOINT>) {
+    /* Must use :has() to match games.css specificity (0-1-1).
+       overscroll-behavior: auto overrides games.css `contain` for clean touchpad scroll. */
+    html:has(.game-viewport),
+    body:has(.game-viewport) {
+        height: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: auto;
+    }
+
+    .game-viewport {
+        height: auto;
+        min-height: 100svh;
+        max-height: none;
+        overflow: visible;
+    }
+    /* ...plus layout-specific overrides */
+}
+```
+
+**Plain `body { overflow-y: auto }` does NOT work** — specificity (0-0-1) loses to games.css `body:has(.game-viewport) { overflow: hidden }` (0-1-1).
+
+See `docs/template.md` Layout B/D sections and `docs/ARCHITECTURE.md` § "CSS specificity gotcha" for the full rationale.
 
 ---
 

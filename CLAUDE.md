@@ -86,3 +86,36 @@ The sync comment in `games.css` marks the last sync date — update it when you 
 - Do not create separate CSS files for individual games (use `<style>` in the game file)
 - Do not use relative paths for `/includes/header.html` in `games.js`
 - Do not use the class `.game-card` inside game pages — it belongs to hub card items in `games.css`. Use a different name (e.g. `.board-panel`) for the game's own panels
+- Do not duplicate `html, body { overflow: hidden; height: 100% }` in a game's inline `<style>` — `games.css` already locks the page via `html:has(.game-viewport), body:has(.game-viewport) { overflow: hidden }`. The duplicate is redundant on desktop and adds cascade confusion on mobile.
+
+## Layout B / Layout D mobile page-scroll — required pattern
+
+Every 2-column (Layout B) and 3-column (Layout D) game must include this exact block in its mobile breakpoint, with `overscroll-behavior: auto` set explicitly. **Forgetting `overscroll-behavior: auto` is the single most common cause of "touchpad scroll doesn't work in DevTools" bugs.**
+
+```css
+@media (max-width: <YOUR_BREAKPOINT>) {
+    /* Must use :has() to match games.css specificity (0-1-1).
+       overscroll-behavior: auto overrides games.css `contain` for clean touchpad scroll. */
+    html:has(.game-viewport),
+    body:has(.game-viewport) {
+        height: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: auto;
+    }
+
+    .game-viewport {
+        height: auto;
+        min-height: 100svh;
+        max-height: none;
+        overflow: visible;
+        /* layout-specific overrides... */
+    }
+
+    /* layout-specific overrides for .game-area, .game-shell, panels, etc. */
+}
+```
+
+Plain `body { overflow-y: auto }` (specificity 0-0-1) does NOT work — it loses to the games.css `:has()` rule (0-1-1).
+
+See `docs/ARCHITECTURE.md` § "CSS specificity gotcha" and `docs/template.md` Layout B/D sections for details.

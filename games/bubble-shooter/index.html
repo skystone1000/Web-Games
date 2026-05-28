@@ -170,7 +170,9 @@
 
     // ── State ──────────────────────────────────────────────────────────────────
     let state = 'idle'; // idle | running | paused | dead | levelcomplete
-    let canvas, ctx, wrap;
+    const canvas = document.getElementById('game-canvas');
+    const ctx    = canvas.getContext('2d');
+    const wrap   = document.getElementById('canvas-wrap');
     let R = 22; // bubble radius — recalculated on resize
     let grid;   // grid[row][col] = color string or null
     let score = 0;
@@ -194,9 +196,6 @@
 
     // ── Canvas init & resize ───────────────────────────────────────────────────
     function initCanvas() {
-        canvas = document.getElementById('game-canvas');
-        ctx    = canvas.getContext('2d');
-        wrap   = document.getElementById('canvas-wrap');
         resize();
     }
 
@@ -210,7 +209,9 @@
 
     // ── Hex grid math ─────────────────────────────────────────────────────────
     function hexPos(row, col) {
-        const x = col * R * 2 + (row % 2 === 1 ? R : 0) + R + 10;
+        // Center the grid horizontally in the canvas
+        const xOffset = canvas.width / 2 - (GRID_COLS - 1) * R;
+        const x = xOffset + col * R * 2 + (row % 2 === 1 ? R : 0);
         const y = row * R * 1.73 + R + 50;
         return { x, y };
     }
@@ -434,21 +435,24 @@
         flyBubble.x += flyBubble.vx;
         flyBubble.y += flyBubble.vy;
 
-        // Wall bounces (one bounce only)
-        if (flyBubble.x - R < 10) {
-            flyBubble.x = 10 + R;
+        // Wall bounces (one bounce only) — walls align with grid edges
+        const wallLeft  = canvas.width / 2 - GRID_COLS * R;
+        const wallRight = canvas.width / 2 + GRID_COLS * R;
+        if (flyBubble.x - R < wallLeft) {
+            flyBubble.x = wallLeft + R;
             flyBubble.vx = Math.abs(flyBubble.vx);
             flyBounced = true;
         }
-        if (flyBubble.x + R > canvas.width - 10) {
-            flyBubble.x = canvas.width - 10 - R;
+        if (flyBubble.x + R > wallRight) {
+            flyBubble.x = wallRight - R;
             flyBubble.vx = -Math.abs(flyBubble.vx);
             flyBounced = true;
         }
 
         // Reached ceiling row
         if (flyBubble.y - R < 50) {
-            const col = Math.round((flyBubble.x - R - 10) / (R * 2));
+            const xOffset = canvas.width / 2 - (GRID_COLS - 1) * R;
+            const col = Math.round((flyBubble.x - xOffset) / (R * 2));
             placeBubble(0, Math.max(0, Math.min(GRID_COLS - 1, col)));
             return;
         }
@@ -540,24 +544,27 @@
         ctx.setLineDash([7, 7]);
         ctx.strokeStyle = 'rgba(255,255,255,0.18)';
         ctx.lineWidth   = 2;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
 
         let x = sx, y = sy;
         let vx = Math.cos(shooter.angle);
         let vy = Math.sin(shooter.angle);
         let bounced = false;
+        let bounceX = null, bounceY = null;
+        const wallLeft  = canvas.width / 2 - GRID_COLS * R;
+        const wallRight = canvas.width / 2 + GRID_COLS * R;
 
         for (let i = 0; i < 600; i++) {
             x += vx * 1.5;
             y += vy * 1.5;
-            if (x - R < 10 && !bounced) {
-                x = 10 + R;
+            if (x - R < wallLeft && !bounced) {
+                x = wallLeft + R;
+                bounceX = x; bounceY = y;
                 vx = Math.abs(vx);
                 bounced = true;
             }
-            if (x + R > canvas.width - 10 && !bounced) {
-                x = canvas.width - 10 - R;
+            if (x + R > wallRight && !bounced) {
+                x = wallRight - R;
+                bounceX = x; bounceY = y;
                 vx = -Math.abs(vx);
                 bounced = true;
             }
@@ -575,6 +582,11 @@
             }
             if (hit) break;
         }
+
+        // Draw two segments when bounced so the guide visually matches the cursor direction
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        if (bounced && bounceX !== null) ctx.lineTo(bounceX, bounceY);
         ctx.lineTo(x, y);
         ctx.stroke();
         ctx.setLineDash([]);

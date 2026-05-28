@@ -273,11 +273,22 @@
 
         /* ── Responsive ── */
         @media (max-width: 900px) {
-            body { overflow-y: auto; }
+            /* Use :has() to match games.css specificity (0-1-1). Plain `body { overflow-y: auto }`
+               has (0-0-1) and loses to games.css `body:has(.game-viewport) { overflow: hidden }`.
+               overscroll-behavior: auto overrides games.css `contain` for clean touchpad scroll. */
+            html:has(.game-viewport),
+            body:has(.game-viewport) {
+                height: auto;
+                overflow-x: hidden;
+                overflow-y: auto;
+                overscroll-behavior: auto;
+            }
 
             .game-viewport {
                 height: auto;
                 min-height: 100svh;
+                max-height: none;
+                overflow: visible;
             }
 
             .game-area {

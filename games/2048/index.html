@@ -73,6 +73,8 @@
 		/* ── Left panel ── */
 		.board-panel {
 			padding: 1.5rem;
+			display: flex;
+			flex-direction: column;
 		}
 
 		/* ── Score bar above board ── */
@@ -80,6 +82,7 @@
 			display: flex;
 			gap: 0.75rem;
 			margin-bottom: 1rem;
+			flex-shrink: 0;
 		}
 
 		.score-chip {
@@ -109,18 +112,27 @@
 
 		/* ── Board ── */
 		.board-wrap {
+			flex: 1;
+			min-height: 0;
 			position: relative;
-			width: 100%;
+			container-type: size;
+			overflow: hidden;
+			display: flex;
+			align-items: center;
+			justify-content: center;
 		}
 
 		#board-grid {
+			position: relative;
+			flex-shrink: 0;
 			display: grid;
 			grid-template-columns: repeat(4, 1fr);
 			gap: 10px;
 			padding: 10px;
 			background: var(--surface2);
 			border-radius: var(--r);
-			width: 100%;
+			width: min(100cqw, 100cqh);
+			aspect-ratio: 1;
 		}
 
 		.bg-cell {
@@ -288,24 +300,57 @@
 
 		/* ── Responsive ── */
 		@media (max-width: 860px) {
-			body { overflow-y: auto; }
+			/* Override games.css :has() rule (0-1-1 specificity).
+			   overscroll-behavior: auto required — games.css sets `contain` which
+			   can stall touchpad/touch-emulation scroll on this breakpoint. */
+			html:has(.game-viewport),
+			body:has(.game-viewport) {
+				height: auto;
+				overflow-x: hidden;
+				overflow-y: auto;
+				overscroll-behavior: auto;
+			}
 
 			.game-viewport {
 				height: auto;
 				min-height: 100svh;
+				max-height: none;
+				overflow: visible;
+				padding: 86px clamp(14px, 3vw, 24px) 28px;
+				align-items: flex-start;
+				justify-content: flex-start;
+				flex-direction: column;
 			}
 
 			.game-area {
-				overflow-y: visible;
-				padding: 1.25rem 1rem;
+				width: 100%;
+				height: auto;
+				overflow: visible;
+				position: static;
 			}
 
 			.game-shell {
 				position: static;
 				inset: auto;
+				width: 100%;
 				grid-template-columns: 1fr;
 				grid-template-rows: auto;
 				gap: 1.25rem;
+			}
+
+			.board-panel {
+				min-height: 0;
+			}
+
+			.board-wrap {
+				/* Fixed height on mobile so the board has room */
+				height: min(80vw, 440px);
+				flex: none;
+				container-type: size;
+			}
+
+			#board-grid {
+				width: min(100cqw, 100cqh);
 			}
 
 			.side {
@@ -316,10 +361,6 @@
 		}
 
 		@media (max-width: 560px) {
-			.game-area {
-				padding: 1rem 4vw;
-			}
-
 			.board-panel {
 				padding: 1rem;
 			}
@@ -382,30 +423,31 @@
 							<div class="bg-cell"></div>
 							<div class="bg-cell"></div>
 							<div class="bg-cell"></div>
-						</div>
-						<div id="tile-layer"></div>
 
-						<!-- Win overlay -->
-						<div class="game-overlay" id="win-overlay">
-							<div class="overlay-emoji">🎉</div>
-							<div class="overlay-title" style="color:var(--accent)">You reached 2048!</div>
-							<div class="overlay-sub">Impressive! Keep going for a higher score.</div>
-							<button class="btn btn-p d-inline-flex align-items-center gap-2" id="keep-going-btn">
-								<span class="material-icons-round" style="font-size:17px">trending_up</span>Keep Going
-							</button>
-							<button class="btn btn-o d-inline-flex align-items-center gap-2" id="win-new-btn">
-								<span class="material-icons-round" style="font-size:17px">refresh</span>New Game
-							</button>
-						</div>
+							<div id="tile-layer"></div>
 
-						<!-- Game over overlay -->
-						<div class="game-overlay" id="gameover-overlay">
-							<div class="overlay-emoji">😔</div>
-							<div class="overlay-title">Game Over</div>
-							<div class="overlay-sub">No moves left. Try again!</div>
-							<button class="btn btn-p d-inline-flex align-items-center gap-2" id="gameover-new-btn">
-								<span class="material-icons-round" style="font-size:17px">refresh</span>New Game
-							</button>
+							<!-- Win overlay -->
+							<div class="game-overlay" id="win-overlay">
+								<div class="overlay-emoji">🎉</div>
+								<div class="overlay-title" style="color:var(--accent)">You reached 2048!</div>
+								<div class="overlay-sub">Impressive! Keep going for a higher score.</div>
+								<button class="btn btn-p d-inline-flex align-items-center gap-2" id="keep-going-btn">
+									<span class="material-icons-round" style="font-size:17px">trending_up</span>Keep Going
+								</button>
+								<button class="btn btn-o d-inline-flex align-items-center gap-2" id="win-new-btn">
+									<span class="material-icons-round" style="font-size:17px">refresh</span>New Game
+								</button>
+							</div>
+
+							<!-- Game over overlay -->
+							<div class="game-overlay" id="gameover-overlay">
+								<div class="overlay-emoji">😔</div>
+								<div class="overlay-title">Game Over</div>
+								<div class="overlay-sub">No moves left. Try again!</div>
+								<button class="btn btn-p d-inline-flex align-items-center gap-2" id="gameover-new-btn">
+									<span class="material-icons-round" style="font-size:17px">refresh</span>New Game
+								</button>
+							</div>
 						</div>
 					</div>
 				</section>

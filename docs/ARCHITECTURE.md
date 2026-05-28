@@ -67,9 +67,12 @@ Header has NO inline scripts. All behaviour wired by `games.js` after inject.
 #### CSS specificity gotcha — mobile body scroll override
 `games.css` sets:
 ```css
-html:has(.game-viewport), body:has(.game-viewport) { overflow: hidden }
+html:has(.game-viewport), body:has(.game-viewport) {
+    overflow: hidden;
+    overscroll-behavior: contain;
+}
 ```
-This has specificity (0-1-1). A plain `html, body` rule in a media query has (0-0-1) and **loses** to it. To override, the media query rule must use the same `:has(.game-viewport)` selector:
+This has specificity (0-1-1). A plain `html, body` rule in a media query has (0-0-1) and **loses** to it. To override, the media query rule must use the same `:has(.game-viewport)` selector AND reset `overscroll-behavior`:
 ```css
 @media (max-width: 1080px) {
     html:has(.game-viewport),
@@ -77,9 +80,16 @@ This has specificity (0-1-1). A plain `html, body` rule in a media query has (0-
         height: auto;
         overflow-x: hidden;
         overflow-y: auto;
+        overscroll-behavior: auto;   /* required — `contain` from games.css can stall touchpad/touch-emulation scroll */
     }
 }
 ```
+
+#### Why `overscroll-behavior: auto` is required on mobile breakpoints
+`games.css` applies `overscroll-behavior: contain` to game pages so the page doesn't rubber-band behind a fullscreen game on desktop. On Layout B/D mobile breakpoints where the body becomes scrollable (`overflow-y: auto`), the inherited `contain` value can cause Chrome's touchpad scrolling — and especially the DevTools touch-emulation mode that triggers when you resize the viewport with the device toolbar — to refuse to initiate a scroll gesture from regions like panel borders or card surfaces. Resetting to `overscroll-behavior: auto` inside the mobile `:has()` block guarantees clean two-finger scroll. **Every 2-column and 3-column game's mobile breakpoint must include this reset.**
+
+#### Do NOT duplicate `html, body { overflow: hidden; height: 100% }` in game inline `<style>`
+`games.css` already locks the page via the `:has()` rule above. Adding a plain `html, body { overflow: hidden; height: 100% }` rule is redundant on desktop and creates cascade confusion when the mobile `:has()` override tries to flip `overflow-y` to `auto`. If you find this rule in an existing game, it is safe to remove.
 
 ## Cross-Repo Links
 Links back to the portfolio use **absolute hardcoded URLs**:

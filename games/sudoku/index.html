@@ -21,7 +21,6 @@
         /* ── Base ── */
         html, body { overflow: hidden; height: 100%; }
 
-        /* Force nav glass */
         nav {
             background: rgba(8, 13, 26, 0.92);
             backdrop-filter: blur(18px);
@@ -29,7 +28,6 @@
             box-shadow: 0 1px 0 var(--border);
         }
 
-        /* Ambient background */
         body::before {
             content: '';
             position: fixed;
@@ -41,88 +39,71 @@
                 radial-gradient(ellipse 45% 45% at 15% 85%, rgba(0,229,255,0.08) 0%, transparent 60%);
         }
 
-        /* ── Layout ── */
+        /* ── Layout D: three-column ── */
         .game-viewport {
-            flex-direction: column;
+            padding: 82px clamp(14px, 3vw, 34px) 18px;
             align-items: stretch;
-            justify-content: flex-start;
-            padding-top: 66px;
-        }
-
-        .inner {
-            flex: 1;
-            height: calc(100dvh - 66px);
+            justify-content: center;
             position: relative;
             z-index: 1;
-            min-height: 0;
-            overflow: hidden;
         }
 
-        .game-shell {
-            position: absolute;
-            inset: 1.25rem 1.5rem;
+        .sudoku-layout {
+            width: 100%;
+            height: 100%;
             display: grid;
-            grid-template-columns: 70fr 30fr;
+            grid-template-columns: 20fr 60fr 20fr;
             grid-template-rows: minmax(0, 1fr);
-            gap: 1.5rem;
+            gap: clamp(14px, 2vw, 20px);
+            align-items: stretch;
         }
 
-        .panel {
+        /* ── Panel base ── */
+        .ctrl-panel, .board-panel, .info-panel {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--r);
             box-shadow: var(--shadow);
-            overflow: hidden;
             min-height: 0;
         }
 
-        .left-panel {
-            padding: 1.5rem;
-            height: 100%;
-            overflow-y: auto;
-            box-sizing: border-box;
-        }
-
-        /* ── Difficulty pills ── */
-        .diff-pills {
+        .ctrl-panel, .info-panel {
+            overflow: hidden;
+            padding: clamp(14px, 1.5vw, 20px);
             display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1.25rem;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 0.8rem;
+            overflow-y: auto;
         }
 
-        .diff-pill {
-            padding: 7px 18px;
-            border-radius: 50px;
-            font-size: 0.82rem;
-            font-weight: 700;
-            font-family: 'Inter', sans-serif;
-            background: var(--surface2);
-            color: var(--text2);
-            border: 1px solid var(--border);
-            cursor: pointer;
-            transition: all var(--ease);
+        /* ── Center board panel ── */
+        .board-panel {
+            overflow: hidden;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse 70% 70% at 50% 40%, rgba(41,121,255,0.06) 0%, transparent 68%),
+                        var(--surface);
+            position: relative;
         }
 
-        .diff-pill:hover {
-            border-color: var(--primary);
-            color: var(--primary-light);
-        }
-
-        .diff-pill.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
-            box-shadow: 0 4px 16px rgba(41,121,255,0.35);
+        .board-shell {
+            /* Square: smaller of panel width or available viewport height */
+            width: min(100%, calc(100dvh - 100px));
+            aspect-ratio: 1;
+            flex-shrink: 0;
+            position: relative;
+            container-type: size;
         }
 
         /* ── Sudoku board ── */
         #sudoku-board {
             display: grid;
             grid-template-columns: repeat(9, 1fr);
-            width: min(100%, min(calc(100svh - 220px), 450px));
-            aspect-ratio: 1;
-            border: 2px solid rgba(255,255,255,0.25);
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(255,255,255,0.28);
             border-radius: 4px;
             overflow: hidden;
         }
@@ -133,7 +114,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(0.85rem, 2vw, 1.25rem);
+            font-size: clamp(0.55rem, 1.85cqw, 1.15rem);
             font-weight: 600;
             cursor: pointer;
             position: relative;
@@ -153,47 +134,94 @@
         .sudoku-cell[data-row="3"],
         .sudoku-cell[data-row="6"] { border-top: 2px solid rgba(255,255,255,0.3); }
 
-        .sudoku-cell.given {
-            background: var(--bg2);
+        .sudoku-cell.given    { background: var(--bg2); font-weight: 700; cursor: default; }
+        .sudoku-cell.selected { box-shadow: inset 0 0 0 2px var(--primary); background: rgba(41,121,255,0.1); }
+        .sudoku-cell.peer     { background: var(--surface2); }
+        .sudoku-cell.same-num { background: var(--accent-dim); }
+        .sudoku-cell.mistake  { box-shadow: inset 0 0 0 2px #ef4444; color: #ef4444 !important; }
+        .sudoku-cell:hover:not(.given) { border-color: rgba(41,121,255,0.4); }
+
+        /* ── Win shimmer ── */
+        @keyframes shimmer-green {
+            0%   { background: var(--surface); }
+            40%  { background: rgba(52,211,153,0.35); }
+            100% { background: var(--surface); }
+        }
+        .sudoku-cell.win-flash { animation: shimmer-green 0.6s ease forwards; }
+
+        /* ── Board overlay ── */
+        .board-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            border-radius: var(--rs);
+            background: rgba(8,13,26,0.88);
+            backdrop-filter: blur(6px);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            z-index: 10;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .board-overlay.visible { display: flex; }
+        .overlay-emoji { font-size: clamp(2rem, 5cqw, 3rem); }
+        .overlay-title { font-size: clamp(1rem, 2.5cqw, 1.4rem); font-weight: 800; }
+        .overlay-sub   { color: var(--text2); font-size: 0.82rem; max-width: 260px; }
+
+        /* ── Left panel: difficulty ── */
+        .ctrl-section-label {
+            font-size: 0.68rem;
             font-weight: 700;
-            cursor: default;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text3);
         }
 
-        .sudoku-cell.selected {
-            box-shadow: inset 0 0 0 2px var(--primary);
-            background: rgba(41,121,255,0.1);
+        .diff-pills {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
         }
 
-        .sudoku-cell.peer {
+        .diff-pill {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: var(--rs);
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
             background: var(--surface2);
+            color: var(--text2);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all var(--ease);
+            text-align: center;
         }
 
-        .sudoku-cell.same-num {
-            background: var(--accent-dim);
+        .diff-pill:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
         }
 
-        .sudoku-cell.mistake {
-            box-shadow: inset 0 0 0 2px #ef4444;
-            color: #ef4444 !important;
-        }
-
-        .sudoku-cell:hover:not(.given) {
-            border-color: rgba(41,121,255,0.4);
+        .diff-pill.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 16px rgba(41,121,255,0.35);
         }
 
         /* ── Number pad ── */
         #num-pad {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 6px;
-            margin-top: 1rem;
-            max-width: min(100%, 450px);
         }
 
         .num-btn {
-            flex: 1;
-            min-width: 38px;
-            height: 42px;
+            aspect-ratio: 1;
+            min-width: 0;
             border-radius: var(--rs);
             border: 1px solid var(--border);
             background: var(--surface2);
@@ -222,100 +250,78 @@
         }
 
         .num-btn.erase-btn {
-            flex: 1.5;
-            font-size: 0.78rem;
-            font-weight: 700;
+            aspect-ratio: auto;
+            height: 40px;
+            grid-column: span 2;
+            font-size: 0.72rem;
             color: var(--text2);
         }
 
         .num-btn.notes-btn {
-            flex: 1.5;
-            font-size: 0.78rem;
-            font-weight: 700;
+            aspect-ratio: auto;
+            height: 40px;
+            font-size: 0.72rem;
             color: var(--text2);
         }
 
-        /* ── Win shimmer animation ── */
-        @keyframes shimmer-green {
-            0%   { background: var(--surface); }
-            40%  { background: rgba(52,211,153,0.35); }
-            100% { background: var(--surface); }
-        }
-
-        .sudoku-cell.win-flash {
-            animation: shimmer-green 0.6s ease forwards;
-        }
-
-        /* ── Sidebar ── */
-        .side {
-            padding: 1.5rem;
-            height: 100%;
-            overflow-y: auto;
-            box-sizing: border-box;
-        }
-
+        /* ── Right panel: info ── */
         h1 {
-            font-size: clamp(1.7rem, 3vw, 2.5rem);
+            font-size: clamp(1.5rem, 2.5vw, 2.2rem);
             font-weight: 800;
             letter-spacing: -1px;
             line-height: 1.1;
-            margin-bottom: 0.7rem;
         }
 
         h1 span { color: var(--primary-light); }
 
         .sub {
             color: var(--text2);
-            font-size: 0.9rem;
-            line-height: 1.6;
-            margin-bottom: 1.25rem;
+            font-size: 0.82rem;
+            line-height: 1.55;
         }
 
-        /* ── Stats ── */
         .stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-            margin-bottom: 1rem;
+            gap: 0.5rem;
         }
 
         .stat {
             background: var(--bg2);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 0.85rem 0.6rem;
+            border-radius: 10px;
+            padding: 0.65rem 0.35rem;
             text-align: center;
         }
 
         .stat-num {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 800;
             color: var(--primary-light);
             line-height: 1;
         }
 
         .stat-lbl {
-            font-size: 0.68rem;
+            font-size: 0.6rem;
             color: var(--text3);
             text-transform: uppercase;
             letter-spacing: 0.6px;
-            margin-top: 4px;
+            margin-top: 3px;
         }
 
-        /* ── Status pill ── */
         .status-pill {
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 50px;
-            font-size: 0.8rem;
+            font-size: 0.76rem;
             font-weight: 700;
             background: var(--surface2);
             border: 1px solid var(--border);
             color: var(--text2);
-            margin-bottom: 1.25rem;
             transition: all var(--ease);
+            align-self: flex-start;
         }
 
         .status-pill.playing {
@@ -330,83 +336,89 @@
             color: #34D399;
         }
 
-        /* ── Rules ── */
         .rules {
             display: flex;
             flex-direction: column;
-            gap: 0.7rem;
-            margin-bottom: 1.25rem;
+            gap: 0.55rem;
+            flex: 1;
         }
 
         .rule {
             display: flex;
             align-items: flex-start;
-            gap: 0.65rem;
+            gap: 0.55rem;
             color: var(--text2);
-            font-size: 0.85rem;
-            line-height: 1.5;
+            font-size: 0.78rem;
+            line-height: 1.45;
         }
 
         .rule span {
             color: var(--primary-light);
-            font-size: 17px;
+            font-size: 15px;
             flex-shrink: 0;
             margin-top: 1px;
         }
 
-        /* ── Actions ── */
         .actions {
             display: flex;
             flex-direction: column;
-            gap: 0.65rem;
+            gap: 0.55rem;
+            margin-top: auto;
         }
 
         .actions .btn {
-            padding: 12px 20px;
+            padding: 10px 14px;
             font-weight: 700;
             justify-content: center;
+            font-size: 0.82rem;
         }
 
-        /* ── Board overlay (win) ── */
-        .board-overlay {
-            display: none;
-            position: absolute;
-            inset: 0;
-            border-radius: var(--rs);
-            background: rgba(8,13,26,0.88);
-            backdrop-filter: blur(6px);
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            z-index: 10;
-            padding: 1.5rem;
-            text-align: center;
+        /* ── Responsive: mobile page-scroll at ≤1080px ── */
+        @media (max-width: 1080px) {
+            /* Override games.css :has() rule. overscroll-behavior: auto required —
+               games.css sets `contain` which can block touchpad/touch-emulation scroll. */
+            html:has(.game-viewport),
+            body:has(.game-viewport) {
+                height: auto;
+                overflow-x: hidden;
+                overflow-y: auto;
+                overscroll-behavior: auto;
+            }
+            .game-viewport {
+                height: auto;
+                min-height: 100svh;
+                max-height: none;
+                overflow: visible;
+                padding: 86px clamp(14px, 3vw, 24px) 28px;
+                align-items: flex-start;
+                justify-content: flex-start;
+                flex-direction: column;
+            }
+            .sudoku-layout {
+                width: 100%;
+                height: auto;
+                display: flex;
+                flex-direction: column;
+                gap: clamp(12px, 2vw, 18px);
+            }
+            .info-panel  { order: 1; width: 100%; }
+            .board-panel { order: 2; width: 100%; overflow: visible; }
+            .ctrl-panel  { order: 3; width: 100%; }
+            .ctrl-panel, .info-panel { height: auto; overflow-y: visible; }
+            /* Horizontal diff pills on mobile */
+            .diff-pills { flex-direction: row; }
+            .diff-pill  { width: auto; flex: 1; padding: 7px 8px; }
+            /* Horizontal num pad on mobile */
+            #num-pad { grid-template-columns: repeat(6, 1fr); }
+            .num-btn.erase-btn { grid-column: span 1; aspect-ratio: 1; height: auto; font-size: 0.65rem; }
+            .num-btn.notes-btn { aspect-ratio: 1; height: auto; font-size: 0.65rem; }
+            /* Board shell: switch back to vw-based sizing on mobile page-scroll */
+            .board-shell { width: min(100%, 72vw); margin: 1.5rem auto; container-type: size; }
         }
 
-        .board-overlay.visible { display: flex; }
-
-        .overlay-emoji { font-size: clamp(2.5rem, 6vw, 3.5rem); }
-        .overlay-title { font-size: clamp(1.1rem, 3vw, 1.5rem); font-weight: 800; }
-        .overlay-sub   { color: var(--text2); font-size: 0.88rem; max-width: 300px; }
-
-        /* ── Responsive ── */
-        @media (max-width: 900px) {
-            body { overflow-y: auto; }
-            .game-viewport { height: auto; min-height: 100svh; }
-            .inner { height: auto; overflow-y: visible; padding: 1.25rem 1rem; }
-            .game-shell { position: static; inset: auto; grid-template-columns: 1fr; grid-template-rows: auto; gap: 1.25rem; }
-            .left-panel { height: auto; overflow-y: visible; }
-            .side { order: -1; height: auto; overflow-y: visible; }
-        }
-
-        @media (max-width: 560px) {
-            .inner { padding-left: 4vw; padding-right: 4vw; }
-            .left-panel, .side { padding: 1.1rem; }
-            .stats { gap: 0.5rem; }
-            .stat { padding: 0.65rem 0.4rem; }
-            .stat-num { font-size: 1.1rem; }
-            #sudoku-board { width: 100%; }
+        @media (max-width: 760px) {
+            .game-viewport { padding: 86px 14px 24px; }
+            .board-shell { width: min(100%, 88vw); }
         }
     </style>
 </head>
@@ -414,95 +426,95 @@
     <div id="header-placeholder"></div>
 
     <div class="game-viewport">
-        <main class="inner">
-            <div class="game-shell">
+        <div class="sudoku-layout">
 
-                <!-- Left panel: difficulty pills + board + number pad -->
-                <section class="panel left-panel">
-                    <div class="diff-pills">
-                        <button class="diff-pill active" data-diff="easy">Easy</button>
-                        <button class="diff-pill" data-diff="medium">Medium</button>
-                        <button class="diff-pill" data-diff="hard">Hard</button>
-                    </div>
-                    <div style="position:relative">
-                        <div id="sudoku-board" aria-label="Sudoku board"></div>
-                        <div class="board-overlay" id="board-overlay">
-                            <div class="overlay-emoji" id="overlay-emoji">🧩</div>
-                            <div class="overlay-title" id="overlay-title">You Solved It!</div>
-                            <div class="overlay-sub" id="overlay-sub"></div>
-                            <button class="btn btn-p d-inline-flex align-items-center gap-2" id="overlay-new-btn">
-                                <span class="material-icons-round" style="font-size:17px">refresh</span>New Puzzle
-                            </button>
-                        </div>
-                    </div>
-                    <div id="num-pad"></div>
-                </section>
+            <!-- Left: difficulty + number pad -->
+            <aside class="ctrl-panel">
+                <div class="ctrl-section-label">Difficulty</div>
+                <div class="diff-pills">
+                    <button class="diff-pill active" data-diff="easy">Easy</button>
+                    <button class="diff-pill" data-diff="medium">Medium</button>
+                    <button class="diff-pill" data-diff="hard">Hard</button>
+                </div>
+                <div class="ctrl-section-label">Numbers</div>
+                <div id="num-pad"></div>
+            </aside>
 
-                <!-- Right sidebar -->
-                <aside class="panel side">
-                    <div class="s-label">Browser Game</div>
-                    <h1>Su<span>doku</span></h1>
-                    <p class="sub">Fill the 9×9 grid so every row, column, and 3×3 box contains the digits 1–9. Three difficulty levels — how fast can you solve it?</p>
-
-                    <div class="stats" aria-label="game stats">
-                        <div class="stat">
-                            <div class="stat-num" id="time-val">0:00</div>
-                            <div class="stat-lbl">Time</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-num" id="mistakes-val">0</div>
-                            <div class="stat-lbl">Mistakes</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-num" id="best-time-val">—</div>
-                            <div class="stat-lbl">Best Time</div>
-                        </div>
-                    </div>
-
-                    <div class="status-pill" id="status-pill">
-                        <span class="material-icons-round" style="font-size:14px">radio_button_unchecked</span>
-                        Ready
-                    </div>
-
-                    <div class="rules">
-                        <div class="rule">
-                            <span class="material-icons-round">touch_app</span>
-                            Click a cell to select it, then type a digit (1–9) or use the number pad.
-                        </div>
-                        <div class="rule">
-                            <span class="material-icons-round">backspace</span>
-                            Press Backspace or the Erase button to clear an entry. Arrow keys navigate cells.
-                        </div>
-                        <div class="rule">
-                            <span class="material-icons-round">edit_note</span>
-                            Notes mode: jot candidate digits as small pencil marks — toggle with the ✏ button.
-                        </div>
-                        <div class="rule">
-                            <span class="material-icons-round">lightbulb</span>
-                            Hint: reveals the correct value for one cell (+30 s penalty added to time).
-                        </div>
-                        <div class="rule">
-                            <span class="material-icons-round">cancel</span>
-                            Wrong entries are highlighted in red. Fix them before they add up!
-                        </div>
-                    </div>
-
-                    <div class="actions">
-                        <button class="btn btn-p d-inline-flex align-items-center gap-2" id="hint-btn">
-                            <span class="material-icons-round" style="font-size:17px">lightbulb</span>Hint (+30s)
-                        </button>
-                        <button class="btn btn-p d-inline-flex align-items-center gap-2" id="new-game-btn">
+            <!-- Center: sudoku board -->
+            <section class="board-panel">
+                <div class="board-shell">
+                    <div id="sudoku-board" aria-label="Sudoku board"></div>
+                    <div class="board-overlay" id="board-overlay">
+                        <div class="overlay-emoji" id="overlay-emoji">🧩</div>
+                        <div class="overlay-title" id="overlay-title">You Solved It!</div>
+                        <div class="overlay-sub" id="overlay-sub"></div>
+                        <button class="btn btn-p d-inline-flex align-items-center gap-2" id="overlay-new-btn">
                             <span class="material-icons-round" style="font-size:17px">refresh</span>New Puzzle
                         </button>
-                        <a href="/" class="btn btn-o d-inline-flex align-items-center gap-2">
-                            <span class="material-icons-round" style="font-size:17px">arrow_back</span>All Games
-                        </a>
                     </div>
-                </aside>
+                </div>
+            </section>
 
-            </div>
-        </main>
-    </div>
+            <!-- Right: game info -->
+            <aside class="info-panel">
+                <div class="s-label">Browser Game</div>
+                <h1>Su<span>doku</span></h1>
+                <p class="sub">Fill the 9×9 grid so every row, column, and 3×3 box contains the digits 1–9.</p>
+
+                <div class="stats" aria-label="game stats">
+                    <div class="stat">
+                        <div class="stat-num" id="time-val">0:00</div>
+                        <div class="stat-lbl">Time</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-num" id="mistakes-val">0</div>
+                        <div class="stat-lbl">Mistakes</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-num" id="best-time-val">—</div>
+                        <div class="stat-lbl">Best Time</div>
+                    </div>
+                </div>
+
+                <div class="status-pill" id="status-pill">
+                    <span class="material-icons-round" style="font-size:14px">radio_button_unchecked</span>
+                    Ready
+                </div>
+
+                <div class="rules">
+                    <div class="rule">
+                        <span class="material-icons-round">touch_app</span>
+                        Click a cell, then type a digit or use the number pad.
+                    </div>
+                    <div class="rule">
+                        <span class="material-icons-round">edit_note</span>
+                        Notes mode: pencil marks for candidates — toggle with ✏.
+                    </div>
+                    <div class="rule">
+                        <span class="material-icons-round">lightbulb</span>
+                        Hint reveals one correct cell (+30 s penalty).
+                    </div>
+                    <div class="rule">
+                        <span class="material-icons-round">cancel</span>
+                        Wrong entries highlight in red — fix them!
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-p d-inline-flex align-items-center gap-2" id="hint-btn">
+                        <span class="material-icons-round" style="font-size:17px">lightbulb</span>Hint (+30s)
+                    </button>
+                    <button class="btn btn-p d-inline-flex align-items-center gap-2" id="new-game-btn">
+                        <span class="material-icons-round" style="font-size:17px">refresh</span>New Puzzle
+                    </button>
+                    <a href="/" class="btn btn-o d-inline-flex align-items-center gap-2">
+                        <span class="material-icons-round" style="font-size:17px">arrow_back</span>All Games
+                    </a>
+                </div>
+            </aside>
+
+        </div><!-- /.sudoku-layout -->
+    </div><!-- /.game-viewport -->
 
     <script src="/assets/js/games.js"></script>
     <script>

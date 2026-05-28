@@ -345,11 +345,14 @@
         }
 
         @media (max-width: 1080px) {
+            /* Override games.css :has() rule. overscroll-behavior: auto required —
+               games.css sets `contain` which can block touchpad/touch-emulation scroll. */
             html:has(.game-viewport),
             body:has(.game-viewport) {
                 height: auto;
                 overflow-x: hidden;
                 overflow-y: auto;
+                overscroll-behavior: auto;
             }
 
             .game-viewport {

@@ -373,6 +373,24 @@
 
         /* ── Responsive ── */
         @media (max-width: 900px) {
+            /* Required to flip page-scroll on. games.css :has() rule locks html/body
+               to overflow: hidden — must override with matching specificity (0-1-1).
+               overscroll-behavior: auto overrides games.css `contain` for clean touchpad scroll. */
+            html:has(.game-viewport),
+            body:has(.game-viewport) {
+                height: auto;
+                overflow-x: hidden;
+                overflow-y: auto;
+                overscroll-behavior: auto;
+            }
+
+            .game-viewport {
+                height: auto;
+                min-height: 100svh;
+                max-height: none;
+                overflow: visible;
+            }
+
             .game-area {
                 overflow-y: visible;
                 padding: 1.25rem 1rem;
