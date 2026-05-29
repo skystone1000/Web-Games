@@ -21,11 +21,8 @@
     <link rel="stylesheet" href="/assets/css/games.css" />
 
     <style>
-        html,
-        body {
-            overflow: hidden;
-            height: 100%;
-        }
+        /* games.css already locks html/body via :has(.game-viewport) — do NOT duplicate
+           `html, body { overflow: hidden; height: 100% }` here. Adds cascade confusion. */
 
         nav {
             background: rgba(8, 13, 26, 0.92);
@@ -45,21 +42,31 @@
                 radial-gradient(ellipse 45% 45% at 15% 85%, rgba(0, 229, 255, 0.08) 0%, transparent 60%);
         }
 
+        /* ── Layout: canonical two-column (Layout Type B) ── */
         .game-viewport {
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            padding-top: 66px;
             position: relative;
             z-index: 1;
-            padding: 82px 4vw 18px;
-            align-items: center;
-            justify-content: center;
+        }
+
+        .game-area {
+            flex: 1;
+            position: relative;          /* containing block for .battle-layout */
+            z-index: 1;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .battle-layout {
-            width: min(1220px, 100%);
-            height: min(730px, calc(100dvh - 104px));
+            position: absolute;
+            inset: 1.25rem 1.5rem;
             display: grid;
-            grid-template-columns: 70fr 30fr;
-            grid-template-rows: minmax(0, 1fr);
-            gap: 1rem;
+            grid-template-columns: 70fr 30fr;       /* boards left, sidebar right */
+            grid-template-rows: minmax(0, 1fr);    /* NOT plain 1fr */
+            gap: 1.25rem;
             align-items: stretch;
         }
 
@@ -69,7 +76,7 @@
             border-radius: var(--r);
             box-shadow: var(--shadow);
             overflow: hidden;
-            min-height: 0;
+            min-height: 0;                          /* required — grid items default to auto */
         }
 
         .boards-panel {
@@ -256,13 +263,16 @@
             pointer-events: none;
         }
 
+        /* Sidebar — scrolls internally on short desktop screens (canonical Layout B `.side`) */
         .sidebar {
+            height: 100%;
             padding: 1.15rem;
             display: flex;
             flex-direction: column;
             gap: 1rem;
             justify-content: space-between;
             overflow-y: auto;
+            box-sizing: border-box;
         }
 
         .sidebar h1 {
@@ -445,13 +455,32 @@
                 min-height: 100svh;
                 max-height: none;
                 overflow: visible;
-                padding: 82px 4vw 28px;
+                padding: 86px 4vw 28px;
+                align-items: flex-start;
+                justify-content: flex-start;
+            }
+
+            /* Undo absolute-positioned shell on mobile — single-column page-scroll */
+            .game-area {
+                width: 100%;
+                height: auto;
+                overflow: visible;
+                position: static;
             }
 
             .battle-layout {
+                position: static;
+                inset: auto;
+                width: 100%;
                 height: auto;
                 grid-template-columns: 1fr;
                 grid-template-rows: auto;
+                gap: 1.25rem;
+            }
+
+            .sidebar {
+                height: auto;
+                overflow-y: visible;
             }
 
             .stat-grid {
@@ -507,8 +536,9 @@
     <div id="header-placeholder"></div>
 
     <div class="game-viewport">
-        <main class="battle-layout">
-            <section class="game-panel boards-panel">
+        <main class="game-area">
+            <div class="battle-layout">
+                <section class="game-panel boards-panel">
                 <div class="phase-bar">
                     <div class="phase-pill" id="phasePill">
                         <span class="phase-dot"></span>
@@ -620,6 +650,7 @@
                     </a>
                 </div>
             </aside>
+            </div><!-- /.battle-layout -->
         </main>
     </div>
 
